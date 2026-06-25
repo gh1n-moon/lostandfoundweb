@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Selamat Datang - Lost & Found UNIPOL</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { 
+            background: linear-gradient(rgba(0, 30, 12, 0.75), rgba(0, 30, 12, 0.75)), 
+                        url("{{ url_for('static', filename='bg_kampus.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .welcome-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            object-fit: contain;
+        }
+        h1 { font-size: 24px; margin-bottom: 8px; font-weight: 700; }
+        p { font-size: 14px; color: #fede26; margin-bottom: 30px; font-weight: 600; }
+        .login-options { display: flex; flex-direction: column; gap: 15px; }
+        .btn-login {
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        .btn-guest {
+            background-color: #007A33;
+            color: white;
+            border: 1px solid #007A33;
+        }
+        .btn-guest:hover {
+            background-color: #005c26;
+            transform: translateY(-2px);
+        }
+        .btn-admin {
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        .btn-admin:hover {
+            background-color: white;
+            color: #003314;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+<div class="welcome-container">
+    <img src="{{ url_for('static', filename='logo_unipol.png') }}" alt="Logo UNIPOL" class="logo">
+    <h1>Lost & Found</h1>
+    <p>Universitas Lamappapoleonro</p>
+    
+    {% if error %}
+        <div style="background-color: #fee2e2; color: #991b1b; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; font-weight: bold;">
+            ⚠️ {{ error }}
+        </div>
+    {% endif %}
+
+    <div class="login-options">
+        <a href="/index?role=guest" class="btn-login btn-guest">👥 Masuk sebagai Guest</a>
+        
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 5px 0;">
+
+        <form action="/" method="POST" id="adminForm">
+            <button type="button" id="btnPemicuAdmin" class="btn-login btn-admin" style="width: 100%; cursor: pointer;">🔐 Masuk sebagai Admin</button>
+            
+            <div id="kotakSandi" style="display: none; margin-top: 10px;">
+                <input type="password" name="password" placeholder="Masukkan Sandi Admin..." required 
+                       style="width: 100%; padding: 11px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 14px; color: #333;">
+                <button type="submit" class="btn-login btn-guest" style="width: 100%; cursor: pointer; background-color: #fede26; color: #007A33;">Verifikasi Sandi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Script untuk memunculkan kotak input password saat tombol admin diklik
+    document.getElementById('btnPemicuAdmin').addEventListener('click', function() {
+        document.getElementById('kotakSandi').style.display = 'block';
+        this.style.display = 'none'; // Sembunyikan tombol pemicu utama
+    });
+</script>
+
+</body>
+</html>

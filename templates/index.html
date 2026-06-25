@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Lost & Found - Universitas Lamappapoleonro</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f7f9fa; color: #333; overflow-x: hidden; }
+        
+        header { 
+            background: linear-gradient(rgba(0, 122, 51, 0.78), rgba(0, 122, 51, 0.78)), 
+                        url("{{ url_for('static', filename='bg_kampus.jpg') }}") no-repeat center center;
+            background-size: 105% auto;
+            color: white; 
+            padding: 35px 50px; 
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            text-align: left;
+            min-height: 260px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .header-main-info {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .header-logo {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.15));
+            transition: transform 0.3s ease;
+        }
+        header:hover .header-logo {
+            transform: scale(1.05) rotate(3deg);
+        }
+
+        .header-text h1 { 
+            font-size: 28px; 
+            font-weight: 700; 
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .header-text p { 
+            font-size: 16px; 
+            color: #fede26; 
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        nav { 
+            display: block; 
+            background: #fede26; 
+            height: 8px; 
+            box-shadow: 0 3px 6px rgba(0,0,0,0.08); 
+        }
+        
+        .container { max-width: 1200px; margin: 25px auto; padding: 0 20px; }
+
+        .stats-container-header { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px;
+            width: 100%;
+            max-width: 750px;
+            margin: 12px 0 0 0;
+        }
+
+        .stat-card-header { 
+            background: rgba(255, 255, 255, 0.12); 
+            backdrop-filter: blur(8px); 
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.18); 
+            color: white; 
+            border-radius: 10px;
+            padding: 10px 18px;
+            text-align: center; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-card-header h2 { 
+            font-size: 26px; 
+            font-weight: 700; 
+            margin: 0; 
+            line-height: 1.2;
+        }
+
+        .stat-card-header p { 
+            font-size: 12px; 
+            font-weight: 600;
+            margin-top: 2px;
+            opacity: 0.95; 
+        }
+
+        /* Badge Status Role Aktif */
+        .role-badge-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+        .role-badge {
+            font-size: 12px;
+            font-weight: bold;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: #eef1f4;
+            color: #555;
+            border: 1px solid #ddd;
+        }
+        .role-badge.admin-mode {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fca5a5;
+        }
+
+        .tips-banner { background-color: #e8f5e9; border: 1px dashed #2e7d32; border-radius: 8px; padding: 15px; display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+        .tips-icon { background: #2e7d32; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+        .tips-text { font-size: 13px; color: #1e4620; line-height: 1.4; }
+
+        .pills-container { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+        
+        .pill-btn { 
+            padding: 10px 22px; 
+            border-radius: 20px; 
+            background: #eef1f4; 
+            color: #555; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 14px; 
+            border: none; 
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .pill-btn:hover {
+            background: #e2e7ec;
+            color: #111;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        .pill-btn:active {
+            transform: translateY(1px);
+        }
+        .pill-btn.active { 
+            background: #007A33; 
+            color: white; 
+            box-shadow: 0 4px 10px rgba(0, 122, 51, 0.25); 
+        }
+
+        .btn-report-nav { 
+            background: #2e7d32; 
+            color: white; 
+            margin-left: auto; 
+            border-radius: 20px; 
+            padding: 10px 20px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 14px; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        .btn-report-nav:hover {
+            background: #1e4620;
+            transform: scale(1.03);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .toolbar { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); margin-bottom: 25px; }
+        .search-form { display: flex; gap: 10px; flex-wrap: wrap; }
+        .search-form input, .search-form select { padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; min-width: 220px; flex: 1; transition: all 0.3s ease; }
+        .search-form input:focus, .search-form select:focus { border-color: #007A33; outline: none; box-shadow: 0 0 0 3px rgba(0, 122, 51, 0.1); }
+        .btn-search { background: #007A33; color: white; padding: 10px 25px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-search:hover { background: #006428; }
+        .btn-reset { background: #6c757d; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-size: 14px; display: flex; align-items: center; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04); 
+            position: relative; 
+            border-left: 4px solid #007A33; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+        .card.lost-border { border-left-color: #dc3545; }
+        .card.done-border { border-left-color: #6c757d; opacity: 0.75; }
+        
+        .badge { position: absolute; top: 20px; right: 20px; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        .badge.lost { background-color: #fff0f1; color: #dc3545; }
+        .badge.found { background-color: #e8f5e9; color: #007A33; }
+        .badge.done { background-color: #f1f3f5; color: #6c757d; }
+
+        .card h3 { font-size: 18px; margin-bottom: 12px; color: #222; max-width: 75%; font-weight: 700; }
+        .card.done-border h3 { text-decoration: line-through; color: #777; }
+        
+        .card-meta { font-size: 13.5px; margin-bottom: 8px; color: #555; display: flex; align-items: center; gap: 8px; }
+        .card-desc { font-size: 13px; color: #666; margin: 10px 0; line-height: 1.5; background: #f8f9fa; padding: 10px; border-radius: 6px; flex-grow: 1; }
+        
+        .actions-group { display: flex; gap: 8px; margin-top: 15px; align-items: center; }
+        .btn-wa { background-color: #128C7E; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 5px; flex: 1; justify-content: center; transition: background 0.2s; }
+        .btn-wa:hover { background-color: #0a6f63; }
+        .btn-done-action { background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 10px 12px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; text-align: center; transition: 0.2s; }
+        .btn-done-action:hover { background-color: #fef3c7; }
+        .btn-delete { background-color: #fff5f5; border: 1px solid #feb2b2; color: #e53e3e; padding: 9px 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-delete:hover { background-color: #fee2e2; }
+    </style>
+</head>
+<body>
+
+<header id="mainHeader">
+    <div class="header-main-info">
+        <img src="{{ url_for('static', filename='logo_unipol.png') }}" alt="Logo UNIPOL" class="header-logo">
+        <div class="header-text">
+            <h1>Pusat Informasi Lost & Found</h1>
+            <p>Universitas Lamappapoleonro</p>
+        </div>
+    </div>
+
+    <div class="stats-container-header">
+        <div class="stat-card-header"><h2>{{ hilang }}</h2><p>Hilang</p></div>
+        <div class="stat-card-header"><h2>{{ ditemukan }}</h2><p>Ditemukan</p></div>
+        <div class="stat-card-header"><h2>{{ selesai }}</h2><p>Selesai</p></div>
+    </div>
+</header>
+
+<nav></nav>
+
+<div class="container">
+    <div class="role-badge-container">
+        {% if role == 'admin' %}
+            <span class="role-badge admin-mode">Mode Akses: 🔐 Administrator</span>
+        {% else %}
+            <span class="role-badge">Mode Akses: 👥 Guest</span>
+        {% endif %}
+    </div>
+
+    <div class="tips-banner">
+        <div class="tips-icon">💡</div>
+        <div class="tips-text">
+            <strong>Tips Pelaporan:</strong> Pastikan deskripsi barang selengkap mungkin (warna, merek, ciri khusus) agar pemilik mudah mengenali. Sertakan lokasi terakhir terlihat dan nomor WhatsApp aktif.
+        </div>
+    </div>
+
+    <div class="pills-container">
+        <a href="/index?status=all&role={{ role }}" class="pill-btn {% if tab_aktif == 'all' %}active{% endif %}">Halaman Utama</a>
+        <a href="/index?status=Lost&role={{ role }}" class="pill-btn {% if tab_aktif == 'Lost' %}active{% endif %}">Laporan Kehilangan</a>
+        <a href="/index?status=Found&role={{ role }}" class="pill-btn {% if tab_aktif == 'Found' %}active{% endif %}">Laporan Penemuan</a>
+        <a href="/index?status=Done&role={{ role }}" class="pill-btn {% if tab_aktif == 'Done' %}active{% endif %}">Riwayat Selesai</a>
+        <a href="/laporkan?role={{ role }}" class="btn-report-nav">⊕ Laporkan Item</a>
+    </div>
+
+    <div class="toolbar">
+        <form action="/index" method="GET" class="search-form">
+            <input type="hidden" name="status" value="{{ tab_aktif }}">
+            <input type="hidden" name="role" value="{{ role }}"> 
+            <input type="text" name="search" placeholder="🔍 Cari nama barang..." value="{{ cari }}">
+            <select name="kategori" onchange="this.form.submit()">
+                <option value="">-- Semua Kategori --</option>
+                <option value="Dokumen" {% if kategori_aktif == 'Dokumen' %}selected{% endif %}>Dokumen/Kartu</option>
+                <option value="Elektronik" {% if kategori_aktif == 'Elektronik' %}selected{% endif %}>Perangkat Elektronik</option>
+                <option value="Kunci" {% if kategori_aktif == 'Kunci' %}selected{% endif %}>Kunci Kendaraan</option>
+                <option value="Dompet" {% if kategori_aktif == 'Dompet' %}selected{% endif %}>Dompet/Uang</option>
+                <option value="Lainnya" {% if kategori_aktif == 'Lainnya' %}selected{% endif %}>Lainnya</option>
+            </select>
+            <button type="submit" class="btn-search">Cari</button>
+            {% if cari or kategori_aktif %}
+                <a href="/index?status={{ tab_aktif }}&role={{ role }}" class="btn-reset">Reset</a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="grid">
+        {% for item in barang %}
+        <div class="card {% if item.tipe == 'Lost' %}lost-border{% elif item.tipe == 'Done' %}done-border{% endif %}">
+            {% if item.tipe == 'Lost' %}
+                <span class="badge lost">🔴 Hilang</span>
+            {% elif item.tipe == 'Found' %}
+                <span class="badge found">🟢 Ditemukan</span>
+            {% else %}
+                <span class="badge done">⚪ Selesai</span>
+            {% endif %}
+            
+            <h3>{{ item.nama }}</h3>
+            <div class="card-meta">🏷️ <strong>Kategori:</strong> {{ item.kategori }}</div>
+            <div class="card-meta">📍 <strong>Lokasi:</strong> {{ item.lokasi }}</div>
+            <div class="card-desc">{{ item.deskripsi }}</div>
+            <div class="card-meta" style="color: #888; font-size: 12px; margin-top: 5px;">📅 {{ item.tanggal }}</div>
+            
+            <div class="actions-group">
+                {% if item.tipe != 'Done' %}
+                    <a href="https://wa.me/{{ item.kontak }}" target="_blank" class="btn-wa">💬 Hubungi via WhatsApp</a>
+                    
+                    {% if role == 'admin' %}
+                        <a href="/selesai/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-done-action">✓ Selesai</a>
+                    {% endif %}
+                {% else %}
+                    <p style="color: #2e7d32; font-weight: bold; font-size: 13px; flex: 1;">✓ Kasus Ditutup</p>
+                {% endif %}
+
+                {% if role == 'admin' %}
+                    <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-delete" title="Hapus Laporan" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini?')">🗑️</a>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <p style="grid-column: 1/-1; text-align: center; color: #888; padding: 30px;">Tidak ada laporan barang pada kategori ini.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    window.addEventListener('scroll', function() {
+        const header = document.getElementById('mainHeader');
+        let scrollValue = window.scrollY;
+        
+        if (scrollValue === 0) {
+            header.style.padding = "35px 50px";
+            header.style.backgroundSize = "105% auto";
+        } else {
+            header.style.padding = "20px 50px";
+            header.style.backgroundSize = "100% auto";
+        }
+    });
+</script>
+
+</body>
+</html>
