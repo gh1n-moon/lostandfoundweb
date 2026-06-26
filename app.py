@@ -11,7 +11,6 @@ DB_FILE = "database_lostfound.db"
 # ==============================================================================
 # FITUR 1: PROFANITY FILTER (BLACKLIST KATA KASAR)
 # ==============================================================================
-# Kamu bisa bebas menambahkan kata-kata kasar lokal/daerah lainnya di dalam list ini
 KATA_KASAR_BLACKLIST = ['anjing', 'babi', 'bodoh', 'tolol', 'bangsat', 'puki', 'laso'] 
 
 def mengandung_kata_kasar(teks):
@@ -24,7 +23,7 @@ def mengandung_kata_kasar(teks):
     return False
 
 # ==============================================================================
-# UTILITAS DATABASE
+# UTILITAS DATABASE (DENGAN RESTRUKTURISASI TABEL KATEGORI)
 # ==============================================================================
 def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
@@ -34,7 +33,8 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Membuat tabel jika belum ada (tipe default nanti bisa diisi 'Pending', 'Lost', 'Found', 'Done')
+    
+    # 1. Membuat tabel barang jika belum ada
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS barang (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,9 +47,31 @@ def init_db():
             tanggal TEXT NOT NULL
         )
     ''')
+    
+    # 2. TABEL BARU: Membuat tabel daftar kategori dinamis
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS daftar_kategori (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nama_kategori TEXT NOT NULL UNIQUE
+        )
+    ''')
+    
+    # 3. Isi kategori bawaan awal (default) jika tabel kategori masih kosong melompong
+    cursor.execute("SELECT COUNT(*) FROM daftar_kategori")
+    if cursor.fetchone()[0] == 0:
+        kategori_awal = [
+            ('Dokumen/Kartu',), 
+            ('Perangkat Elektronik',), 
+            ('Kunci Kendaraan',), 
+            ('Dompet/Uang',), 
+            ('Lainnya',)
+        ]
+        cursor.executemany("INSERT INTO daftar_kategori (nama_kategori) VALUES (?)", kategori_awal)
+        
     conn.commit()
     conn.close()
 
+# Jalankan inisialisasi database saat aplikasi start
 init_db()
 
 # ==============================================================================
@@ -103,10 +125,8 @@ def index():
     elif status_tab == 'Done':
         query += " AND tipe = 'Done'"
     elif status_tab == 'Pending' and role_aktif == 'admin':
-        # Tab khusus admin untuk melihat antrean persetujuan
         query += " AND tipe LIKE 'Pending_%'"
     else:
-        # Tampilan default halaman utama (tidak memunculkan data pending & done)
         query += " AND tipe NOT LIKE 'Pending_%' AND tipe != 'Done'"
         
     if kategori_filter:
@@ -122,9 +142,13 @@ def index():
     
     cursor.execute(query, params)
     rows = cursor.fetchall()
-    conn.close()
-    
     hasil_filter = [dict(row) for row in rows]
+    
+    # AMBIL DATA DARI TABEL KATEGORI: Untuk dioper ke dropdown filter halaman utama
+    cursor.execute("SELECT * FROM daftar_kategori ORDER BY id ASC")
+    kategori_db = cursor.fetchall()
+    
+    conn.close()
         
     return render_template('index.html', 
                            barang=hasil_filter, 
@@ -134,7 +158,8 @@ def index():
                            hilang=total_hilang,
                            ditemukan=total_ditemukan,
                            selesai=total_selesai,
-                           pending_count=total_pending, # Kirim variabel jumlah antrean ke HTML
+                           pending_count=total_pending,
+                           kategori_list=kategori_db, # Dikirimkan ke HTML
                            role=role_aktif)
 
 # ==============================================================================
@@ -146,12 +171,10 @@ def setujui(barang_id):
     if role_aktif == 'admin':
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Ambil data tipe aslinya (Pending_Lost atau Pending_Found)
         cursor.execute("SELECT tipe FROM barang WHERE id = ?", (barang_id,))
         row = cursor.fetchone()
         if row:
-            tipe_asli = row['tipe'].split('_')[1] # Mengambil kata setelah 'Pending_'
-            # Update tipe menjadi murni 'Lost' atau 'Found' agar tayang ke publik
+            tipe_asli = row['tipe'].split('_')[1] 
             cursor.execute("UPDATE barang SET tipe = ? WHERE id = ?", (tipe_asli, barang_id))
             conn.commit()
         conn.close()
@@ -177,16 +200,18 @@ def hapus(barang_id):
         cursor.execute("DELETE FROM barang WHERE id = ?", (barang_id,))
         conn.commit()
         conn.close()
-    # Mengembalikan admin ke tab asal saat dia mengklik hapus/tolak
     return redirect(url_for('index', status=request.args.get('status', 'all'), role=role_aktif))
 
 # ==============================================================================
-# HALAMAN LAPOR BARANG BARU (DENGAN FILTER KATA KASAR & SAVE SEBAGAI PENDING)
+# HALAMAN LAPOR BARANG BARU (DENGAN DROP-DOWN KATEGORI DINAMIS)
 # ==============================================================================
 @app.route('/laporkan', methods=['GET', 'POST'])
 def laporkan():
     role_aktif = request.args.get('role', 'guest')
     pesan_error = None
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
     if request.method == 'POST':
         tipe = request.form.get('tipe')
@@ -197,27 +222,74 @@ def laporkan():
         kontak = request.form.get('kontak')
         tanggal_sekarang = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-        # Jalankan Fitur 1: Cek Kata Kasar
+        # Ambil list kategori untuk render ulang jika terjadi error filter kata kasar
+        cursor.execute("SELECT * FROM daftar_kategori ORDER BY id ASC")
+        kategori_db = cursor.fetchall()
+
         if mengandung_kata_kasar(nama) or mengandung_kata_kasar(lokasi) or mengandung_kata_kasar(deskripsi):
             pesan_error = "Laporan ditolak! Harap tidak menggunakan kata-kata kasar/sensitif."
-            return render_template('laporkan.html', error=pesan_error, role=role_aktif)
+            conn.close()
+            return render_template('laporkan.html', error=pesan_error, role=role_aktif, kategori_list=kategori_db)
 
-        # Jalankan Fitur 2: Ubah status menjadi Pending sebelum disimpan (misal: Pending_Lost)
         status_pending = f"Pending_{tipe}"
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
         cursor.execute('''
             INSERT INTO barang (tipe, nama, kategori, lokasi, deskripsi, kontak, tanggal)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (status_pending, nama, kategori, lokasi, deskripsi, kontak, tanggal_sekarang))
         conn.commit()
         conn.close()
+        
         flash("Laporan Anda berhasil dikirim! Laporan sedang berada dalam antrean peninjauan Admin sebelum diterbitkan ke publik.", "sukses_pending")
-        # Setelah sukses melapor, arahkan kembali ke index
         return redirect(url_for('index', role=role_aktif))
 
-    return render_template('laporkan.html', role=role_aktif, error=pesan_error)
+    # Pengambilan data kategori untuk metode GET (tampilan awal form)
+    cursor.execute("SELECT * FROM daftar_kategori ORDER BY id ASC")
+    kategori_db = cursor.fetchall()
+    conn.close()
+    
+    return render_template('laporkan.html', role=role_aktif, error=pesan_error, kategori_list=kategori_db)
+
+# ==============================================================================
+# ROUTE BARU: MANAGEMENT KATEGORI (KHUSUS ADMIN)
+# ==============================================================================
+@app.route('/admin/kategori', methods=['GET', 'POST'])
+def kelola_kategori():
+    role_aktif = request.args.get('role', 'guest')
+    if role_aktif != 'admin':
+        return redirect(url_for('index', role=role_aktif))
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    pesan_error = None
+
+    if request.method == 'POST':
+        nama_baru = request.form.get('nama_kategori_baru').strip()
+        if nama_baru:
+            try:
+                cursor.execute("INSERT INTO daftar_kategori (nama_kategori) VALUES (?)", (nama_baru,))
+                conn.commit()
+            except sqlite3.IntegrityError:
+                pesan_error = "Kategori tersebut sudah terdaftar!"
+        else:
+            pesan_error = "Nama kategori tidak boleh dikosongkan."
+
+    cursor.execute("SELECT * FROM daftar_kategori ORDER BY id ASC")
+    kategori_db = cursor.fetchall()
+    conn.close()
+    
+    return render_template('kelola_kategori.html', role=role_aktif, kategori_list=kategori_db, error=pesan_error)
+
+@app.route('/admin/kategori/hapus/<int:kat_id>')
+def hapus_kategori(kat_id):
+    role_aktif = request.args.get('role', 'guest')
+    if role_aktif == 'admin':
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM daftar_kategori WHERE id = ?", (kat_id,))
+        conn.commit()
+        conn.close()
+    return redirect(url_for('kelola_kategori', role=role_aktif))
 
 if __name__ == '__main__':
     app.run(debug=True)

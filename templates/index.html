@@ -314,12 +314,12 @@
             <input type="hidden" name="role" value="{{ role }}"> 
             <input type="text" name="search" placeholder="🔍 Cari nama barang..." value="{{ cari }}">
             <select name="kategori" onchange="this.form.submit()">
-                <option value="">-- Semua Kategori --</option>
-                <option value="Dokumen" {% if kategori_aktif == 'Dokumen' %}selected{% endif %}>Dokumen/Kartu</option>
-                <option value="Elektronik" {% if kategori_aktif == 'Elektronik' %}selected{% endif %}>Perangkat Elektronik</option>
-                <option value="Kunci" {% if kategori_aktif == 'Kunci' %}selected{% endif %}>Kunci Kendaraan</option>
-                <option value="Dompet" {% if kategori_aktif == 'Dompet' %}selected{% endif %}>Dompet/Uang</option>
-                <option value="Lainnya" {% if kategori_aktif == 'Lainnya' %}selected{% endif %}>Lainnya</option>
+                 <option value="">-- Semua Kategori --</option>
+                    {% for kat in kategori_list %}
+                 <option value="{{ kat['nama_kategori'] }}" {% if kategori_aktif == kat['nama_kategori'] %}selected{% endif %}>
+                     {{ kat['nama_kategori'] }}
+                 </option>
+                    {% endfor %}
             </select>
             <button type="submit" class="btn-search">Cari</button>
             {% if cari or kategori_aktif %}

@@ -61,12 +61,12 @@
         </div>
         <div class="form-group">
             <label>Kategori</label>
-            <select name="kategori" required>
-                <option value="Dokumen">Dokumen/Kartu</option>
-                <option value="Elektronik">Perangkat Elektronik</option>
-                <option value="Kunci">Kunci Kendaraan</option>
-                <option value="Dompet">Dompet/Uang</option>
-                <option value="Lainnya">Lainnya</option>
+            <label for="kategori">Kategori</label>
+            <select name="kategori" id="kategori" required>
+                <option value="" disabled selected>-- Pilih Kategori --</option>
+                    {% for kat in kategori_list %}
+                <option value="{{ kat['nama_kategori'] }}">{{ kat['nama_kategori'] }}</option>
+                     {% endfor %}
             </select>
         </div>
         <div class="form-group">
