@@ -170,7 +170,7 @@
         }
 
         .btn-report-nav { 
-            background: #2e7d32; 
+            background: #007A33; 
             color: white; 
             margin-left: auto; 
             border-radius: 20px; 
@@ -187,6 +187,34 @@
             background: #1e4620;
             transform: scale(1.03);
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* ANIMASI ROTASI IKON RODA GIGI */
+        .btn-gear-admin {
+            background-color: #4b5563; 
+            color: white; 
+            width: 38px; 
+            height: 38px; 
+            border-radius: 50%; 
+            text-decoration: none; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: background-color 0.3s ease; 
+            vertical-align: middle; 
+            margin-left: 5px;
+        }
+        .btn-gear-admin:hover {
+            background-color: #374151 !important;
+        }
+        .btn-gear-admin .gear-icon {
+            display: inline-block; 
+            transition: transform 0.6s ease; 
+            font-size: 18px; 
+            line-height: 1;
+        }
+        .btn-gear-admin:hover .gear-icon {
+            transform: rotate(180deg);
         }
 
         .toolbar { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); margin-bottom: 25px; }
@@ -263,13 +291,36 @@
 <nav></nav>
 
 <div class="container">
+<!-- POP-UP NOTIFIKASI MODERN -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
                 {% if category == 'sukses_pending' %}
-                    <div style="background-color: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                        🎉 <span>{{ message }}</span>
+                    <div id="customPopup" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
+                        <div style="background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-width: 450px; width: 90%; text-align: center; border-top: 5px solid #10b981; transform: scale(0.9); animation: popIn 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                            <div style="font-size: 45px; margin-bottom: 15px;">🎉</div>
+                            <h3 style="margin-bottom: 10px; color: #111827; font-size: 18px; font-weight: 700;">Berhasil Terkirim!</h3>
+                            <p style="color: #4b5563; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">{{ message }}</p>
+                            <button onclick="closePopup()" style="background: #007A33; color: white; border: none; padding: 10px 30px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 14px; transition: background 0.2s;">Oke</button>
+                        </div>
                     </div>
+
+                    <style>
+                        @keyframes popIn {
+                            to { transform: scale(1); }
+                        }
+                    </style>
+
+                    <script>
+                        // Fungsi untuk menutup pop-up ketika tombol Oke diklik
+                        function closePopup() {
+                            const popup = document.getElementById('customPopup');
+                            if (popup) popup.remove();
+                        }
+
+                        // Otomatis menutup sendiri dalam waktu 7 detik jika didiamkan
+                        setTimeout(closePopup, 7000);
+                    </script>
                 {% endif %}
             {% endfor %}
         {% endif %}
@@ -295,7 +346,6 @@
         <a href="/index?status=Found&role={{ role }}" class="pill-btn {% if tab_aktif == 'Found' %}active{% endif %}">Laporan Penemuan</a>
         <a href="/index?status=Done&role={{ role }}" class="pill-btn {% if tab_aktif == 'Done' %}active{% endif %}">Riwayat Selesai</a>
         
-        <!-- FITUR APPROVAL BARU: HANYA MUNCUL DI SAMPING RIWAYAT SELESAI KALAU SEBAGAI ADMIN -->
         {% if role == 'admin' %}
             <a href="/index?status=Pending&role={{ role }}" class="pill-btn btn-pending-admin {% if tab_aktif == 'Pending' %}active{% endif %}">
                 Antrean Persetujuan 
@@ -305,7 +355,20 @@
             </a>
         {% endif %}
 
-        <a href="/laporkan?role={{ role }}" class="btn-report-nav">⊕ Laporkan Item</a>
+        <a href="/laporkan?role={{ role }}" class="btn-report-nav">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg> 
+            Laporkan Item
+        </a>
+
+        {% if role == 'admin' %}
+            <a href="{{ url_for('kelola_kategori', role=role) }}" class="btn-gear-admin" title="Kelola Kategori">
+                <span class="gear-icon">⚙️</span>
+            </a>
+        {% endif %}
     </div>
 
     <div class="toolbar">
@@ -332,7 +395,6 @@
         {% for item in barang %}
         <div class="card {% if 'Pending_' in item.tipe %}pending-border{% elif item.tipe == 'Lost' %}lost-border{% elif item.tipe == 'Done' %}done-border{% endif %}">
             
-            <!-- Pengecekan Badge Termasuk Kondisi Status Pending -->
             {% if 'Pending_' in item.tipe %}
                 <span class="badge pending">⏳ Pending ({{ item.tipe.split('_')[1] }})</span>
             {% elif item.tipe == 'Lost' %}
@@ -346,14 +408,23 @@
             <h3>{{ item.nama }}</h3>
             <div class="card-meta">🏷️ <strong>Kategori:</strong> {{ item.kategori }}</div>
             <div class="card-meta">📍 <strong>Lokasi:</strong> {{ item.lokasi }}</div>
+            <img>
+            <h3>{{ item.nama }}</h3>
+
+<div style="margin: 10px 0; text-align: center;">
+    <img src="{{ url_for('static', filename='uploads/' + (item.foto if item.foto else 'default.jpg')) }}" 
+         alt="Foto {{ item.nama }}" 
+         style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb;">
+</div>
+
+<div class="card-meta">🏷️ <strong>Kategori:</strong> {{ item.kategori }}</div>
             <div class="card-desc">{{ item.deskripsi }}</div>
             <div class="card-meta" style="color: #888; font-size: 12px; margin-top: 5px;">📅 {{ item.tanggal }}</div>
             
             <div class="actions-group">
-                <!-- LOGIKA GRUP TOMBOL UNTUK STATUS PENDING VS NORMAL -->
                 {% if 'Pending_' in item.tipe %}
                     {% if role == 'admin' %}
-                        <a href="/setujui{{ item.id }}?role={{ role }}" class="btn-approve-action">✓ Setujui</a>
+                        <a href="/setujui/{{ item.id }}?role={{ role }}" class="btn-approve-action">✓ Setujui</a>
                         <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-delete" title="Tolak Laporan" onclick="return confirm('Apakah Anda yakin ingin menolak & menghapus laporan ini?')">❌ Tolak</a>
                     {% endif %}
                 {% else %}

@@ -2,9 +2,17 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from datetime import datetime
 import sqlite3
 import os
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "kunci_rahasia_lostfound_unipol"
+
+# Tentukan tempat penyimpanan folder foto (masuk ke static/uploads)
+UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Pastikan folder 'static/uploads' otomatis terbuat jika belum ada
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 DB_FILE = "database_lostfound.db"
 
@@ -231,12 +239,32 @@ def laporkan():
             conn.close()
             return render_template('laporkan.html', error=pesan_error, role=role_aktif, kategori_list=kategori_db)
 
+        # =======================================================
+        # AWAL LOGIKA UNGGAH FOTO BARANG (LANGKAH KEDUA)
+        # =======================================================
+        file_foto = request.files.get('foto_barang')
+        if file_foto and file_foto.filename != '':
+            # Amankan nama file (misal: "kunci motor.jpg" -> "kunci_motor.jpg")
+            filename = secure_filename(file_foto.filename)
+            # Tentukan jalur penyimpanan ke static/uploads/nama_file.jpg
+            jalur_simpan = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            # Simpan file fisiknya ke folder server
+            file_foto.save(jalur_simpan)
+        else:
+            # Jika user tidak upload foto, otomatis pakai gambar bawaan
+            filename = 'default.jpg'
+        # =======================================================
+        # AKHIR LOGIKA UNGGAH FOTO BARANG
+        # =======================================================
+
         status_pending = f"Pending_{tipe}"
 
+        # MENAMBAHKAN KOLOM 'foto' DAN VARIABEL 'filename' PADA QUERY INSERT
         cursor.execute('''
-            INSERT INTO barang (tipe, nama, kategori, lokasi, deskripsi, kontak, tanggal)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (status_pending, nama, kategori, lokasi, deskripsi, kontak, tanggal_sekarang))
+            INSERT INTO barang (tipe, nama, kategori, lokasi, deskripsi, kontak, tanggal, foto)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (status_pending, nama, kategori, lokasi, deskripsi, kontak, tanggal_sekarang, filename))
+        
         conn.commit()
         conn.close()
         
@@ -249,7 +277,6 @@ def laporkan():
     conn.close()
     
     return render_template('laporkan.html', role=role_aktif, error=pesan_error, kategori_list=kategori_db)
-
 # ==============================================================================
 # ROUTE BARU: MANAGEMENT KATEGORI (KHUSUS ADMIN)
 # ==============================================================================
