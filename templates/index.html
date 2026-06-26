@@ -152,6 +152,22 @@
             color: white; 
             box-shadow: 0 4px 10px rgba(0, 122, 51, 0.25); 
         }
+        /* Style Khusus Tombol Admin Pending */
+        .pill-btn.btn-pending-admin {
+            background-color: #fffbeb;
+            color: #d97706;
+            border: 1px dashed #fcd34d;
+        }
+        .pill-btn.btn-pending-admin:hover {
+            background-color: #fef3c7;
+            color: #b45309;
+        }
+        .pill-btn.btn-pending-admin.active {
+            background-color: #d97706;
+            color: white;
+            border-style: solid;
+            box-shadow: 0 4px 10px rgba(217, 119, 6, 0.25); 
+        }
 
         .btn-report-nav { 
             background: #2e7d32; 
@@ -200,11 +216,13 @@
         }
         .card.lost-border { border-left-color: #dc3545; }
         .card.done-border { border-left-color: #6c757d; opacity: 0.75; }
+        .card.pending-border { border-left-color: #d97706; background-color: #fffdf5; }
         
         .badge { position: absolute; top: 20px; right: 20px; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; }
         .badge.lost { background-color: #fff0f1; color: #dc3545; }
         .badge.found { background-color: #e8f5e9; color: #007A33; }
         .badge.done { background-color: #f1f3f5; color: #6c757d; }
+        .badge.pending { background-color: #fff3cd; color: #d97706; }
 
         .card h3 { font-size: 18px; margin-bottom: 12px; color: #222; max-width: 75%; font-weight: 700; }
         .card.done-border h3 { text-decoration: line-through; color: #777; }
@@ -219,6 +237,9 @@
         .btn-done-action:hover { background-color: #fef3c7; }
         .btn-delete { background-color: #fff5f5; border: 1px solid #feb2b2; color: #e53e3e; padding: 9px 12px; border-radius: 6px; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .btn-delete:hover { background-color: #fee2e2; }
+
+        .btn-approve-action { background-color: #007A33; color: white; padding: 10px 15px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px; text-align: center; flex: 1; transition: 0.2s; }
+        .btn-approve-action:hover { background-color: #006428; }
     </style>
 </head>
 <body>
@@ -262,6 +283,17 @@
         <a href="/index?status=Lost&role={{ role }}" class="pill-btn {% if tab_aktif == 'Lost' %}active{% endif %}">Laporan Kehilangan</a>
         <a href="/index?status=Found&role={{ role }}" class="pill-btn {% if tab_aktif == 'Found' %}active{% endif %}">Laporan Penemuan</a>
         <a href="/index?status=Done&role={{ role }}" class="pill-btn {% if tab_aktif == 'Done' %}active{% endif %}">Riwayat Selesai</a>
+        
+        <!-- FITUR APPROVAL BARU: HANYA MUNCUL DI SAMPING RIWAYAT SELESAI KALAU SEBAGAI ADMIN -->
+        {% if role == 'admin' %}
+            <a href="/index?status=Pending&role={{ role }}" class="pill-btn btn-pending-admin {% if tab_aktif == 'Pending' %}active{% endif %}">
+                Antrean Persetujuan 
+                <span style="background-color: #dc3545; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; margin-left: 5px; font-weight: bold;">
+                    {{ pending_count }}
+                </span>
+            </a>
+        {% endif %}
+
         <a href="/laporkan?role={{ role }}" class="btn-report-nav">⊕ Laporkan Item</a>
     </div>
 
@@ -287,8 +319,12 @@
 
     <div class="grid">
         {% for item in barang %}
-        <div class="card {% if item.tipe == 'Lost' %}lost-border{% elif item.tipe == 'Done' %}done-border{% endif %}">
-            {% if item.tipe == 'Lost' %}
+        <div class="card {% if 'Pending_' in item.tipe %}pending-border{% elif item.tipe == 'Lost' %}lost-border{% elif item.tipe == 'Done' %}done-border{% endif %}">
+            
+            <!-- Pengecekan Badge Termasuk Kondisi Status Pending -->
+            {% if 'Pending_' in item.tipe %}
+                <span class="badge pending">⏳ Pending ({{ item.tipe.split('_')[1] }})</span>
+            {% elif item.tipe == 'Lost' %}
                 <span class="badge lost">🔴 Hilang</span>
             {% elif item.tipe == 'Found' %}
                 <span class="badge found">🟢 Ditemukan</span>
@@ -303,18 +339,26 @@
             <div class="card-meta" style="color: #888; font-size: 12px; margin-top: 5px;">📅 {{ item.tanggal }}</div>
             
             <div class="actions-group">
-                {% if item.tipe != 'Done' %}
-                    <a href="https://wa.me/{{ item.kontak }}" target="_blank" class="btn-wa">💬 Hubungi via WhatsApp</a>
-                    
+                <!-- LOGIKA GRUP TOMBOL UNTUK STATUS PENDING VS NORMAL -->
+                {% if 'Pending_' in item.tipe %}
                     {% if role == 'admin' %}
-                        <a href="/selesai/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-done-action">✓ Selesai</a>
+                        <a href="/setujui{{ item.id }}?role={{ role }}" class="btn-approve-action">✓ Setujui</a>
+                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-delete" title="Tolak Laporan" onclick="return confirm('Apakah Anda yakin ingin menolak & menghapus laporan ini?')">❌ Tolak</a>
                     {% endif %}
                 {% else %}
-                    <p style="color: #2e7d32; font-weight: bold; font-size: 13px; flex: 1;">✓ Kasus Ditutup</p>
-                {% endif %}
+                    {% if item.tipe != 'Done' %}
+                        <a href="https://wa.me/{{ item.kontak }}" target="_blank" class="btn-wa">💬 Hubungi via WhatsApp</a>
+                        
+                        {% if role == 'admin' %}
+                            <a href="/selesai/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-done-action">✓ Selesai</a>
+                        {% endif %}
+                    {% else %}
+                        <p style="color: #2e7d32; font-weight: bold; font-size: 13px; flex: 1;">✓ Kasus Ditutup</p>
+                    {% endif %}
 
-                {% if role == 'admin' %}
-                    <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-delete" title="Hapus Laporan" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini?')">🗑️</a>
+                    {% if role == 'admin' %}
+                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-delete" title="Hapus Laporan" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini?')">🗑️</a>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>

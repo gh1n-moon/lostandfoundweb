@@ -78,6 +78,11 @@
         <button type="submit" class="btn-submit">Kirim Laporan</button>
     </form>
 </div>
+{% if error %}
+    <div style="color: red; background: #fee2e2; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+        ⚠️ {{ error }}
+    </div>
+{% endif %}
 
 <script>
     document.getElementById('lostFoundForm').addEventListener('submit', function(e) {
