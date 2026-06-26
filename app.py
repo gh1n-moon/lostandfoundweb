@@ -1,38 +1,40 @@
 from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime
-import pandas as pd
+import sqlite3
 import os
 
 app = Flask(__name__)
 
-FILE_EXCEL = "database_lostfound.xlsx"
+DB_FILE = "database_lostfound.db"
 
-# Fungsi untuk membaca data dari Excel ke dalam bentuk List of Dictionaries
-def baca_dari_excel():
-    if not os.path.exists(FILE_EXCEL):
-        df_baru = pd.DataFrame(columns=["id", "tipe", "nama", "kategori", "lokasi", "deskripsi", "kontak", "tanggal"])
-        df_baru.to_excel(FILE_EXCEL, index=False)
-        return []
-    
-    df = pd.read_excel(FILE_EXCEL, dtype={"id": "Int64", "kontak": str})
-    df[["tipe", "nama", "kategori", "lokasi", "deskripsi", "tanggal"]] = df[["tipe", "nama", "kategori", "lokasi", "deskripsi", "tanggal"]].fillna("")
-    df["kontak"] = df["kontak"].fillna("")
-    
-    # Konversi ke dict dan pastikan ID murni berupa integer biasa (int) saat masuk ke list
-    daftar_data = df.to_dict(orient="records")
-    for b in daftar_data:
-        if pd.notna(b['id']):
-            b['id'] = int(b['id'])
-            
-    return daftar_data
+# Fungsi untuk membuat koneksi ke SQLite database
+def get_db_connection():
+    conn = sqlite3.connect(DB_FILE)
+    # Row_factory membuat data yang diambil berbentuk seperti dictionary/key-value
+    conn.row_factory = sqlite3.Row
+    return conn
 
-# Fungsi untuk menyimpan kembali data List to file Excel
-def simpan_ke_excel(daftar_data):
-    df = pd.DataFrame(daftar_data)
-    df.to_excel(FILE_EXCEL, index=False)
+# Fungsi untuk inisialisasi database dan tabel saat aplikasi pertama berjalan
+def init_db():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS barang (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tipe TEXT NOT NULL,
+            nama TEXT NOT NULL,
+            kategori TEXT NOT NULL,
+            lokasi TEXT NOT NULL,
+            deskripsi TEXT,
+            kontak TEXT,
+            tanggal TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
 
-def database_kategori_check(daftar, kat):
-    return [b for b in daftar if b['kategori'] == kat]
+# Jalankan inisialisasi database
+init_db()
 
 @app.route('/', methods=['GET', 'POST'])
 def welcome():
@@ -54,29 +56,50 @@ def index():
     pencarian = request.args.get('search', '').lower()
     role_aktif = request.args.get('role', 'guest')
     
-    # Ambil data terbaru dari file Excel
-    data_barang = baca_dari_excel()
+    conn = get_db_connection()
+    cursor = conn.cursor()
     
-    # Menghitung Statistik Secara Real-time untuk Dashboard Atas
-    total_hilang = len([b for b in data_barang if b['tipe'] == 'Lost'])
-    total_ditemukan = len([b for b in data_barang if b['tipe'] == 'Found'])
-    total_selesai = len([b for b in data_barang if b['tipe'] == 'Done'])
+    # 1. Menghitung Statistik Secara Real-time langsung dari Database SQL
+    cursor.execute("SELECT COUNT(*) FROM barang WHERE tipe = 'Lost'")
+    total_hilang = cursor.fetchone()[0]
     
-    # Filter Berdasarkan Tab Aktif
+    cursor.execute("SELECT COUNT(*) FROM barang WHERE tipe = 'Found'")
+    total_ditemukan = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM barang WHERE tipe = 'Done'")
+    total_selesai = cursor.fetchone()[0]
+    
+    # 2. Menyusun Query SQL dasar untuk memfilter data barang
+    query = "SELECT * FROM barang WHERE 1=1"
+    params = []
+    
     if status_tab == 'Lost':
-        hasil_filter = [b for b in data_barang if b['tipe'] == 'Lost']
+        query += " AND tipe = 'Lost'"
     elif status_tab == 'Found':
-        hasil_filter = [b for b in data_barang if b['tipe'] == 'Found']
+        query += " AND tipe = 'Found'"
     elif status_tab == 'Done':
-        hasil_filter = [b for b in data_barang if b['tipe'] == 'Done']
+        query += " AND tipe = 'Done'"
     else:
-        hasil_filter = [b for b in data_barang if b['tipe'] != 'Done']
-    
-    # Filter Pencarian Teks dan Dropdown Kategori
+        query += " AND tipe != 'Done'"
+        
     if kategori_filter:
-        hasil_filter = database_kategori_check(hasil_filter, kategori_filter)
+        query += " AND kategori = ?"
+        params.append(kategori_filter)
+        
     if pencarian:
-        hasil_filter = [b for b in hasil_filter if pencarian in str(b['nama']).lower() or pencarian in str(b['deskripsi']).lower()]
+        query += " AND (LOWER(nama) LIKE ? OR LOWER(deskripsi) LIKE ?)"
+        params.append(f"%{pencarian}%")
+        params.append(f"%{pencarian}%")
+        
+    # Urutkan data berdasarkan ID paling baru dimasukkan
+    query += " ORDER BY id DESC"
+    
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+    
+    # Konversi hasil SQLite Row ke bentuk list dictionary biasa agar tidak merusak template HTML kamu
+    hasil_filter = [dict(row) for row in rows]
         
     return render_template('index.html', 
                            barang=hasil_filter, 
@@ -90,39 +113,41 @@ def index():
 
 
 # ==============================================================================
-# 3. PROSES MENGUBAH STATUS BARANG (TETAP REDIRECT KE INDEX FUNGSI UTAMA)
+# 3. PROSES MENGUBAH STATUS BARANG (MENGGUNAKAN UPDATE SQL)
 # ==============================================================================
 @app.route('/selesai/<int:barang_id>')
 def selesai(barang_id):
     role_aktif = request.args.get('role', 'guest')
     
     if role_aktif == 'admin':
-        data_barang = baca_dari_excel()
-        for barang in data_barang:
-            if barang['id'] == barang_id:
-                barang['tipe'] = 'Done'
-                break
-        simpan_ke_excel(data_barang) # Update file Excel
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE barang SET tipe = 'Done' WHERE id = ?", (barang_id,))
+        conn.commit()
+        conn.close()
                 
     return redirect(url_for('index', status=request.args.get('status', 'all'), role=role_aktif))
 
 
 # ==============================================================================
-# 4. PROSES HAPUS BARANG (TETAP REDIRECT KE INDEX FUNGSI UTAMA)
+# 4. PROSES HAPUS BARANG (MENGGUNAKAN DELETE SQL)
 # ==============================================================================
 @app.route('/hapus/<int:barang_id>')
 def hapus(barang_id):
     role_aktif = request.args.get('role', 'guest')
     
     if role_aktif == 'admin':
-        data_barang = baca_dari_excel()
-        data_barang = [b for b in data_barang if b['id'] != barang_id]
-        simpan_ke_excel(data_barang) # Update file Excel
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM barang WHERE id = ?", (barang_id,))
+        conn.commit()
+        conn.close()
         
     return redirect(url_for('index', status=request.args.get('status', 'all'), role=role_aktif))
 
+
 # ==============================================================================
-# 5. HALAMAN LAPOR BARANG BARU (TETAP REDIRECT KE INDEX FUNGSI UTAMA)
+# 5. HALAMAN LAPOR BARANG BARU (MENGGUNAKAN INSERT INTO SQL - AUTO INCREMENT ID)
 # ==============================================================================
 @app.route('/laporkan', methods=['GET', 'POST'])
 def laporkan():
@@ -138,25 +163,15 @@ def laporkan():
         kontak = request.form.get('kontak')
         tanggal_sekarang = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-        # Ambil data lama, buat nomor ID baru secara auto-increment
-        data_barang = baca_dari_excel()
-        baru_id = max([b['id'] for b in data_barang], default=0) + 1
-
-        # Ikat ke dalam struktur dictionary data
-        item_baru = {
-            "id": baru_id,
-            "tipe": tipe,
-            "nama": nama,
-            "kategori": kategori,
-            "lokasi": lokasi,
-            "deskripsi": deskripsi,
-            "kontak": kontak,
-            "tanggal": tanggal_sekarang
-        }
-
-        # Simpan ke Excel
-        data_barang.append(item_baru)
-        simpan_ke_excel(data_barang)
+        # Masukkan data ke SQLite (ID otomatis terisi secara auto-increment karena setingan tabel)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO barang (tipe, nama, kategori, lokasi, deskripsi, kontak, tanggal)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (tipe, nama, kategori, lokasi, deskripsi, kontak, tanggal_sekarang))
+        conn.commit()
+        conn.close()
 
         # Lempar kembali ke halaman utama dashboard dengan role yang sama
         return redirect(url_for('index', role=role_aktif))
@@ -165,7 +180,7 @@ def laporkan():
 
 
 # ==============================================================================
-# RUNNER SERVER UTAMA (WAJIB DI PALING BAWAH DAN MENUTUP FILE)
+# RUNNER SERVER UTAMA
 # ==============================================================================
 if __name__ == '__main__':
     app.run(debug=True)
