@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from datetime import datetime
 import sqlite3
 import os
 
 app = Flask(__name__)
+app.secret_key = "kunci_rahasia_lostfound_unipol"
 
 DB_FILE = "database_lostfound.db"
 
@@ -212,7 +213,7 @@ def laporkan():
         ''', (status_pending, nama, kategori, lokasi, deskripsi, kontak, tanggal_sekarang))
         conn.commit()
         conn.close()
-
+        flash("Laporan Anda berhasil dikirim! Laporan sedang berada dalam antrean peninjauan Admin sebelum diterbitkan ke publik.", "sukses_pending")
         # Setelah sukses melapor, arahkan kembali ke index
         return redirect(url_for('index', role=role_aktif))
 
