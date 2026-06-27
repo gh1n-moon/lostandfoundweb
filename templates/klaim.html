@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konfirmasi Informasi Barang</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; padding: 20px; display: flex; justify-content: center; }
+        .form-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 480px; }
+        h2 { color: #333; margin-top: 0; text-align: center; }
+        .item-summary { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #4b5563; font-size: 14px; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        textarea { resize: vertical; height: 100px; }
+        .btn-submit { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; color: white; cursor: pointer; margin-top: 10px; }
+        .btn-back { display: block; text-align: center; margin-top: 15px; color: #6b7280; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    {% if "Found" in item.tipe %}
+        <h2>📦 Form Klaim Barang</h2>
+    {% else %}
+        <h2>🙋‍♂️ Konfirmasi Penemuan Barang</h2>
+    {% endif %}
+
+    <div class="item-summary">
+        <strong>Nama Barang:</strong> {{ item.nama }}<br>
+        <strong>Kategori:</strong> {{ item.kategori }}<br>
+        <strong>Lokasi di Laporan:</strong> {{ item.lokasi }}
+    </div>
+
+    <form action="{{ url_for('klaim', barang_id=item.id, role=role) }}" method="POST">
+        <div class="form-group">
+            <label for="nama_klaim">Nama Lengkap Anda</label>
+            <input type="text" id="nama_klaim" name="nama_klaim" placeholder="Masukkan nama lengkap" required>
+        </div>
+
+        <div class="form-group">
+            <label for="nim_klaim">NIM (Nomor Induk Mahasiswa)</label>
+            <input type="text" id="nim_klaim" name="nim_klaim" placeholder="Masukkan NIM Anda" required>
+        </div>
+
+        <div class="form-group">
+            <label for="wa_klaim">Nomor WhatsApp Anda</label>
+            <input type="tel" id="wa_klaim" name="wa_klaim" placeholder="Contoh: 0812345678" required>
+        </div>
+
+        <div class="form-group">
+            <label for="bukti_detail">
+                {% if "Found" in item.tipe %}
+                    Deskripsi Bukti Kepemilikan (Ciri khusus barang)
+                {% else %}
+                    Pesan / Lokasi Barang Sekarang (Di mana barang Anda amankan?)
+                {% endif %}
+            </label>
+            <textarea id="bukti_detail" name="bukti_detail" placeholder="Tulis info sedetail mungkin agar admin bisa memverifikasi..." required></textarea>
+        </div>
+
+        {% if "Found" in item.tipe %}
+            <button type="submit" class="btn-submit" style="background-color: #007A33;">Kirim Permintaan Klaim</button>
+        {% else %}
+            <button type="submit" class="btn-submit" style="background-color: #0284c7;">Kirim Info Penemuan</button>
+        {% endif %}
+    </form>
+
+    <a href="{{ url_for('index', role=role) }}" class="btn-back">⬅️ Kembali ke Halaman Utama</a>
+</div>
+
+</body>
+</html>

@@ -353,6 +353,11 @@
                     {{ pending_count }}
                 </span>
             </a>
+         {% if role == 'admin' %}
+    <a href="/admin/klaim?role={{ role }}" style="background-color: #3b82f6; color: white; text-align: center; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block; margin-left: 5px;">
+        📋 Verifikasi Klaim
+    </a>
+{% endif %}    
         {% endif %}
 
         <a href="/laporkan?role={{ role }}" class="btn-report-nav">
@@ -391,7 +396,7 @@
         </form>
     </div>
 
-    <div class="grid">
+   <div class="grid">
         {% for item in barang %}
         <div class="card {% if 'Pending_' in item.tipe %}pending-border{% elif item.tipe == 'Lost' %}lost-border{% elif item.tipe == 'Done' %}done-border{% endif %}">
             
@@ -408,16 +413,13 @@
             <h3>{{ item.nama }}</h3>
             <div class="card-meta">🏷️ <strong>Kategori:</strong> {{ item.kategori }}</div>
             <div class="card-meta">📍 <strong>Lokasi:</strong> {{ item.lokasi }}</div>
-            <img>
-            <h3>{{ item.nama }}</h3>
 
-<div style="margin: 10px 0; text-align: center;">
-    <img src="{{ url_for('static', filename='uploads/' + (item.foto if item.foto else 'default.jpg')) }}" 
-         alt="Foto {{ item.nama }}" 
-         style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb;">
-</div>
+            <div style="margin: 10px 0; text-align: center;">
+                <img src="{{ url_for('static', filename='uploads/' + (item.foto if item.foto else 'default.jpg')) }}" 
+                     alt="Foto {{ item.nama }}" 
+                     style="width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb;">
+            </div>
 
-<div class="card-meta">🏷️ <strong>Kategori:</strong> {{ item.kategori }}</div>
             <div class="card-desc">{{ item.deskripsi }}</div>
             <div class="card-meta" style="color: #888; font-size: 12px; margin-top: 5px;">📅 {{ item.tanggal }}</div>
             
@@ -429,22 +431,40 @@
                     {% endif %}
                 {% else %}
                     {% if item.tipe != 'Done' %}
-                        <a href="https://wa.me/{{ item.kontak }}" target="_blank" class="btn-wa">💬 Hubungi via WhatsApp</a>
-                        
-                        {% if role == 'admin' %}
-                            <a href="/selesai/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-done-action">✓ Selesai</a>
+                        <div style="display: flex; gap: 10px; width: 100%; align-items: center;">
+                            {% if "Found" in item.tipe %}
+                                <a href="{{ url_for('klaim', barang_id=item.id, role=role) }}" 
+                                   style="flex: 1; background-color: #007A33; color: white; text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center;">
+                                    📦 Klaim Barang
+                                </a>
+                            {% elif "Dalam_Proses_Klaim" in item.tipe %}
+                                <button disabled style="flex: 1; background-color: #9ca3af; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; font-size: 14px; cursor: not-allowed;">
+                                    ⏳ Sedang Verifikasi Admin
+                                </button>
+                            {% else %}
+                                <a href="{{ url_for('klaim', barang_id=item.id, role=role) }}" 
+                                   style="flex: 1; background-color: #0284c7; color: white; text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center;">
+                                    🙋‍♂️ Saya Menemukan Ini
+                                </a>
+                            {% endif %}
+
+                            <a href="https://api.whatsapp.com/send?text=🚨%20*INFO%20LOST%20%26%20FOUND%20CAMPUS*%20🚨%0A%0A*Barang%3A*%20{{ item.nama }}%0A*Kategori%3A*%20{{ item.kategori }}%0A*Lokasi%3A*%20{{ item.lokasi }}%0A%0AAyo%20bantu%20bagikan%20ke%20yang%20lain%21" 
+                               target="_blank" 
+                               style="background-color: #25D366; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center;">
+                                🔗
+                            </a>
+                        </div> {% if role == 'admin' %}
+                            <a href="/selesai/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-done-action" style="margin-top: 10px; display: block; text-align: center;">✓ Selesai</a>
                         {% endif %}
                     {% else %}
                         <p style="color: #2e7d32; font-weight: bold; font-size: 13px; flex: 1;">✓ Kasus Ditutup</p>
                     {% endif %}
 
                     {% if role == 'admin' %}
-                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-delete" title="Hapus Laporan" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini?')">🗑️</a>
+                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-delete" title="Hapus Laporan" style="margin-top: 10px;" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini?')">🗑️</a>
                     {% endif %}
                 {% endif %}
-            </div>
-        </div>
-        {% else %}
+            </div> </div> {% else %}
         <p style="grid-column: 1/-1; text-align: center; color: #888; padding: 30px;">Tidak ada laporan barang pada kategori ini.</p>
         {% endfor %}
     </div>

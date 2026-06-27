@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Verifikasi Klaim - Admin</title>
+    <style>
+    body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    h2 { color: #1e293b; margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background-color: #f8fafc; color: #64748b; }
+    
+    /* Tambahan baru: Membuat isi kolom aksi berjejer ke samping dengan rapi */
+   td:last-child {
+    white-space: nowrap; /* Teks tombol tetap satu baris */
+    text-align: center;  /* Membuat tombol berada di tengah kolom */
+}
+
+/* KITA BUAT CONTAINER BARU DI DALAM TOMBOL AGAR BERBARIS RAPI */
+.action-container {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+}
+
+    .btn-ya { background-color: #10b981; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+    
+    /* Kita sesuaikan juga class .btn-black yang kamu pakai di tombol Tolak */
+    .btn-black { background-color: #64748b; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+    .btn-tidak { background-color: #ef4444; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+    
+    .btn-back { display: inline-block; margin-bottom: 15px; color: #3b82f6; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="/?role={{ role }}" class="btn-back">⬅️ Kembali ke Dashboard Utama</a>
+    <h2>📋 Antrean Verifikasi Klaim & Penemuan</h2>
+    <p>Periksa bukti identitas mahasiswa di bawah ini sebelum melakukan serah terima barang.</p>
+
+    {% if daftar_klaim %}
+    <table>
+        <thead>
+            <tr>
+                <th>Barang</th>
+                <th>Pengklaim / Penemu</th>
+                <th>NIM</th>
+                <th>No. WhatsApp</th>
+                <th>Kontak Pelapor</th>
+                <th>Pesan Bukti Khusus</th>
+                <th>Tanggal Masuk</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+<tbody>
+    {% for klm in daftar_klaim %}
+    <tr>
+        <td><b>{{ klm.nama_barang }}</b></td>
+        <td>{{ klm.nama_klaim }}</td>
+        <td>{{ klm.nim_klaim }}</td>
+        <td><a href="https://wa.me/{{ klm.wa_klaim }}" target="_blank" style="color: #10b981; font-weight: bold;">{{ klm.wa_klaim }} ↗</a></td>
+        
+        <td>
+            {% if klm.kontak_pelapor %}
+                <a href="https://wa.me/{{ klm.kontak_pelapor }}" target="_blank" style="color: #0284c7; font-weight: bold;">{{ klm.kontak_pelapor }} ↗</a>
+            {% else %}
+                <span style="color: #888; font-style: italic;">Bawaan Admin (Found)</span>
+            {% endif %}
+        </td>
+
+        <td style="max-width: 250px; font-style: italic;">"{{ klm.bukti_detail }}"</td>
+        <td>{{ klm.tanggal_klaim }}</td>
+        <td>
+            <div class="action-container">
+                <a href="/admin/proses_klaim/{{ klm.id }}/setujui?role={{ role }}" class="btn-ya" onclick="return confirm('Setujui klaim ini? Status barang akan berubah jadi Selesai.')">✓ Setujui</a>
+        
+                <a href="/admin/proses_klaim/{{ klm.id }}/tolak?role={{ role }}" class="btn-black" style="background-color: #64748b; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold;" onclick="return confirm('Tolak permintaan ini?')">❌ Tolak</a>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+    </table>
+    {% else %}
+        <p style="text-align: center; color: #888; margin-top: 4px;">🎉 Tidak ada antrean klaim baru saat ini.</p>
+    {% endif %}
+</div>
+
+</body>
+</html>
