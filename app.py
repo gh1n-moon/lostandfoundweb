@@ -266,18 +266,14 @@ def laporkan():
             return render_template('laporkan.html', error=pesan_error, role=role_aktif, kategori_list=kategori_db)
 
         # =======================================================
-        # AWAL LOGIKA UNGGAH FOTO BARANG (LANGKAH KEDUA)
+        # AWAL LOGIKA UNGGAH FOTO BARANG
         # =======================================================
         file_foto = request.files.get('foto_barang')
         if file_foto and file_foto.filename != '':
-            # Amankan nama file (misal: "kunci motor.jpg" -> "kunci_motor.jpg")
             filename = secure_filename(file_foto.filename)
-            # Tentukan jalur penyimpanan ke static/uploads/nama_file.jpg
             jalur_simpan = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            # Simpan file fisiknya ke folder server
             file_foto.save(jalur_simpan)
         else:
-            # Jika user tidak upload foto, otomatis pakai gambar bawaan
             filename = 'default.jpg'
         # =======================================================
         # AKHIR LOGIKA UNGGAH FOTO BARANG
@@ -285,7 +281,6 @@ def laporkan():
 
         status_pending = f"Pending_{tipe}"
 
-        # MENAMBAHKAN KOLOM 'foto' DAN VARIABEL 'filename' PADA QUERY INSERT
         cursor.execute('''
             INSERT INTO barang (tipe, nama, kategori, lokasi, deskripsi, kontak, tanggal, foto)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -328,7 +323,6 @@ def klaim(barang_id):
         ''', (barang_id, nama_klaim, nim_klaim, wa_klaim, bukti_detail, tanggal_sekarang))
         
         # 2. Ubah tipe/status barang menjadi 'Dalam_Proses_Klaim' agar terkunci di halaman utama
-        # Kita deteksi apakah asal barangnya Lost atau Found agar admin tahu
         status_baru = "Dalam_Proses_Klaim"
         cursor.execute("UPDATE barang SET tipe = ? WHERE id = ?", (status_baru, barang_id))
         
@@ -381,6 +375,10 @@ def hapus_kategori(kat_id):
         conn.commit()
         conn.close()
     return redirect(url_for('kelola_kategori', role=role_aktif))
+
+# ==============================================================================
+# FITUR: HALAMAN DAFTAR ANTRIAN KLAIM (SISI ADMIN)
+# ==============================================================================
 @app.route('/admin/klaim')
 def admin_klaim():
     role_aktif = request.args.get('role', 'guest')
@@ -391,9 +389,14 @@ def admin_klaim():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Mengambil data klaim beserta info barang yang diklaim menggunakan JOIN
+    # 🟢 DI SINI PERBAIKANNYA: Ambil kolom barang.kontak AS kontak_pelapor lewat JOIN
     cursor.execute('''
-        SELECT klaim.*, barang.nama AS nama_barang, barang.tipe AS tipe_barang, barang.foto
+        SELECT 
+            klaim.*, 
+            barang.nama AS nama_barang, 
+            barang.tipe AS tipe_barang, 
+            barang.foto,
+            barang.kontak AS kontak_pelapor
         FROM klaim
         JOIN barang ON klaim.barang_id = barang.id
     ''')
@@ -411,17 +414,17 @@ def proses_klaim(klaim_id, tindakan):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # 1. Ambil data barang_id sekaligus deskripsi pembuktian untuk cek tipe awal
-   # Ubah query lama menjadi seperti ini (ditambahkan barang.kontak)
-   # Contoh logika di app.py kamu
-    cursor.execute('''SELECT 
-        klaim.*, barang.kontak AS kontak_pelapor FROM klaim JOIN barang ON klaim.barang_id = barang.id''')
-# Gunakan dict factory agar bisa dipanggil dengan klm.kontak_pelapor di HTML
+    # Ambil data klaim spesifik yang sedang diproses berdasarkan klaim_id
+    cursor.execute('''
+        SELECT klaim.*, barang.kontak AS kontak_pelapor 
+        FROM klaim 
+        JOIN barang ON klaim.barang_id = barang.id 
+        WHERE klaim.id = ?
+    ''', (klaim_id,))
     klaim_data = cursor.fetchone()
     
     if klaim_data:
         barang_id = klaim_data['barang_id']
-        bukti_teks = klaim_data['bukti_detail']
         
         if tindakan == 'setujui':
             # Ubah status barang jadi 'Done' (Selesai)
@@ -430,12 +433,11 @@ def proses_klaim(klaim_id, tindakan):
             flash("Klaim berhasil disetujui! Status barang kini 'Selesai'.", "sukses")
             
         elif tindakan == 'tolak':
-            # 2. LOGIKA PINTAR: Ambil kontak dari database barang untuk tahu tipe aslinya
+            # Ambil kontak dari database barang untuk tahu tipe aslinya
             cursor.execute("SELECT kontak FROM barang WHERE id = ?", (barang_id,))
             barang_data = cursor.fetchone()
             
-            # Jika kolom kontak terisi, berarti itu barang 'Lost' (Pelapor mencantumkan kontak miliknya)
-            # Jika kosong/tidak ada, berarti barang 'Found' milik posko admin
+            # Jika kolom kontak terisi, berarti itu barang 'Lost'. Jika kosong, berarti 'Found'
             if barang_data and barang_data['kontak']:
                 status_asal = 'Lost'
             else:
