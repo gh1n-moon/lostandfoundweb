@@ -413,7 +413,10 @@ def proses_klaim(klaim_id, tindakan):
     
     # 1. Ambil data barang_id sekaligus deskripsi pembuktian untuk cek tipe awal
    # Ubah query lama menjadi seperti ini (ditambahkan barang.kontak)
-    cursor.execute(''' SELECT klaim.*, barang.nama AS nama_barang, barang.tipe AS tipe_barang, barang.foto, barang.kontak AS kontak_pelapor FROM klaim JOIN barang ON klaim.barang_id = barang.id ''')
+   # Contoh logika di app.py kamu
+    cursor.execute('''SELECT 
+        klaim.*, barang.kontak AS kontak_pelapor FROM klaim JOIN barang ON klaim.barang_id = barang.id''')
+# Gunakan dict factory agar bisa dipanggil dengan klm.kontak_pelapor di HTML
     klaim_data = cursor.fetchone()
     
     if klaim_data:
