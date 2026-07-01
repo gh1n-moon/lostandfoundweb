@@ -76,16 +76,32 @@
             <label>Deskripsi Detail</label>
             <textarea name="deskripsi" rows="4" placeholder="Berikan ciri-ciri khusus barang..." required></textarea>
         </div>
-        <div class="form-group">
-            <label>Nomor WhatsApp (Format: 628xxx)</label>
-            <input type="text" id="no_wa" name="kontak" placeholder="Contoh: 628123456789" required>
-        </div>
-        <label for="foto_barang">Foto Barang (Opsional)</label>
-<!-- Tambahkan margin-bottom: 20px; pada style di bawah ini -->
-            <input type="file" id="foto_barang" name="foto_barang" accept="image/*" style="padding: 10px; border: 1px solid #ddd; border-radius: 6px; width: 100%; background: white; margin-bottom: 20px;">
-        <button type="submit" class="btn-submit">Kirim Laporan</button>
-    </form>
+       <div class="form-group">
+    <label>Nomor WhatsApp (Format: 628xxx)</label>
+    <input type="text"
+           id="no_wa"
+           name="kontak"
+           oninput="formatWhatsApp()"
+           placeholder="Contoh: 628123456789"
+           required>
 </div>
+      <div class="form-group">
+    <label for="foto_barang">📷 Foto Barang (Opsional)</label>
+
+    <input type="file"
+           id="foto_barang"
+           name="foto_barang"
+           accept="image/*"
+           capture="environment"
+           style="padding:10px; border:1px solid #ddd; border-radius:6px; width:100%; background:white;">
+
+    <small style="display:block; margin-top:6px; color:#666;">
+        Ambil foto langsung dari kamera atau pilih dari galeri.
+    </small>
+</div>
+
+<button type="submit" class="btn-submit">Kirim Laporan</button>
+</form>
 
 <script>
     document.getElementById('lostFoundForm').addEventListener('submit', function(e) {
@@ -98,22 +114,27 @@
 </script>
 
 <script>
-function formatWhatsApp() {
-    let inputWa = document.getElementById('no_wa');
-    let value = inputWa.value.trim();
+document.getElementById('lostFoundForm').addEventListener('submit', function(e) {
 
-    // 1. Bersihkan input dari karakter non-angka (seperti spasi, strip, atau tanda +)
+    let kontak = document.getElementById('no_wa').value.trim();
+
+    if (!kontak.startsWith('62')) {
+        alert('Format nomor WhatsApp harus diawali angka 62.\nContoh: 628123456789');
+        e.preventDefault();
+    }
+});
+
+function formatWhatsApp() {
+
+    let inputWa = document.getElementById('no_wa');
+    let value = inputWa.value;
+
     value = value.replace(/\D/g, '');
 
-    // 2. Jika user mulai mengetik dengan angka '0' (misal: 0812...), otomatis ubah jadi '628'
     if (value.startsWith('0')) {
         value = '62' + value.substring(1);
     }
-    
-    // 3. Jika user iseng mengetik '+62' (setelah dibersihkan jadi 62) tapi double, atau format awalan lainnya yang keliru
-    // Sistem memastikan input tetap rapi
-    
-    // Kembalikan hasil pembersihan ke dalam form input
+
     inputWa.value = value;
 }
 </script>

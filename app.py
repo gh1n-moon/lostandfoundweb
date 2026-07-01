@@ -14,7 +14,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Pastikan folder 'static/uploads' otomatis terbuat jika belum ada
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-DB_FILE = "database_lostfound.db"
+DB_FILE = "database.db"  # Disamakan dengan koneksi database aktif kamu
 
 # ==============================================================================
 # FITUR 1: PROFANITY FILTER (BLACKLIST KATA KASAR)
@@ -34,8 +34,8 @@ def mengandung_kata_kasar(teks):
 # UTILITAS DATABASE (DENGAN RESTRUKTURISASI TABEL KATEGORI)
 # ==============================================================================
 def get_db_connection():
-    # Sesuaikan nama databasemu yang aktif (database.db atau database_lostfound.db)
-    conn = sqlite3.connect('database.db') 
+    # 🟢 PERBAIKAN: Menggunakan variabel DB_FILE agar konsisten membaca berkas yang sama
+    conn = sqlite3.connect(DB_FILE) 
     conn.row_factory = sqlite3.Row
     
     cursor = conn.cursor()
@@ -193,7 +193,7 @@ def index():
                            ditemukan=total_ditemukan,
                            selesai=total_selesai,
                            pending_count=total_pending,
-                           kategori_list=kategori_db, # Dikirimkan ke HTML
+                           kategori_list=kategori_db, 
                            role=role_aktif)
 
 # ==============================================================================
@@ -213,17 +213,6 @@ def setujui(barang_id):
             conn.commit()
         conn.close()
     return redirect(url_for('index', status='Pending', role=role_aktif))
-
-@app.route('/selesai/<int:barang_id>')
-def selesai(barang_id):
-    role_aktif = request.args.get('role', 'guest')
-    if role_aktif == 'admin':
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("UPDATE barang SET tipe = 'Done' WHERE id = ?", (barang_id,))
-        conn.commit()
-        conn.close()
-    return redirect(url_for('index', status=request.args.get('status', 'all'), role=role_aktif))
 
 @app.route('/hapus/<int:barang_id>')
 def hapus(barang_id):
@@ -256,7 +245,6 @@ def laporkan():
         kontak = request.form.get('kontak')
         tanggal_sekarang = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-        # Ambil list kategori untuk render ulang jika terjadi error filter kata kasar
         cursor.execute("SELECT * FROM daftar_kategori ORDER BY id ASC")
         kategori_db = cursor.fetchall()
 
@@ -265,9 +253,6 @@ def laporkan():
             conn.close()
             return render_template('laporkan.html', error=pesan_error, role=role_aktif, kategori_list=kategori_db)
 
-        # =======================================================
-        # AWAL LOGIKA UNGGAH FOTO BARANG
-        # =======================================================
         file_foto = request.files.get('foto_barang')
         if file_foto and file_foto.filename != '':
             filename = secure_filename(file_foto.filename)
@@ -275,9 +260,6 @@ def laporkan():
             file_foto.save(jalur_simpan)
         else:
             filename = 'default.jpg'
-        # =======================================================
-        # AKHIR LOGIKA UNGGAH FOTO BARANG
-        # =======================================================
 
         status_pending = f"Pending_{tipe}"
 
@@ -292,49 +274,118 @@ def laporkan():
         flash("Laporan Anda berhasil dikirim! Laporan sedang berada dalam antrean peninjauan Admin sebelum diterbitkan ke publik.", "sukses_pending")
         return redirect(url_for('index', role=role_aktif))
 
-    # Pengambilan data kategori untuk metode GET (tampilan awal form)
     cursor.execute("SELECT * FROM daftar_kategori ORDER BY id ASC")
     kategori_db = cursor.fetchall()
     conn.close()
     
     return render_template('laporkan.html', role=role_aktif, error=pesan_error, kategori_list=kategori_db)
 
+# ==============================================================================
+# FITUR 3: PROSES KLAIM DINAMIS (POST LEWAT MODAL POP-UP / HALAMAN TERPISAH)
+# ==============================================================================
 @app.route('/klaim/<int:barang_id>', methods=['GET', 'POST'])
 def klaim(barang_id):
     role_aktif = request.args.get('role', 'guest')
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Ambil data barang yang mau diklaim
+    # Ambil data barang berdasarkan ID
     cursor.execute("SELECT * FROM barang WHERE id = ?", (barang_id,))
-    item = cursor.fetchone()
+    barang_data = cursor.fetchone()
     
-    if request.method == 'POST':
-        nama_klaim = request.form.get('nama_klaim')
-        nim_klaim = request.form.get('nim_klaim')
-        wa_klaim = request.form.get('wa_klaim')
-        bukti_detail = request.form.get('bukti_detail')
-        tanggal_sekarang = datetime.now().strftime("%Y-%m-%d %H:%M")
-        
-        # 1. Masukkan data pengklaim ke tabel klaim
-        cursor.execute('''
-            INSERT INTO klaim (barang_id, nama_klaim, nim_klaim, wa_klaim, bukti_detail, tanggal_klaim)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (barang_id, nama_klaim, nim_klaim, wa_klaim, bukti_detail, tanggal_sekarang))
-        
-        # 2. Ubah tipe/status barang menjadi 'Dalam_Proses_Klaim' agar terkunci di halaman utama
-        status_baru = "Dalam_Proses_Klaim"
-        cursor.execute("UPDATE barang SET tipe = ? WHERE id = ?", (status_baru, barang_id))
-        
-        conn.commit()
+    if not barang_data:
         conn.close()
-        
-        flash("Permintaan klaim berhasil dikirim! Admin akan segera meninjau bukti Anda dan menghubungi Anda lewat WhatsApp.", "sukses_pending")
+        flash("Data barang tidak ditemukan!", "gagal")
         return redirect(url_for('index', role=role_aktif))
         
-    conn.close()
-    return render_template('klaim.html', item=item, role=role_aktif)
+    # ==========================================
+    # PROSES METHOD GET (MENAMPILKAN HALAMAN)
+    # ==========================================
+    if request.method == 'GET':
+        conn.close()
+        # Menggunakan 'item=barang_data' agar pas dengan variabel {{ item }} di klaim.html
+        return render_template('klaim.html', item=barang_data, role=role_aktif)
 
+    # ==========================================
+    # PROSES METHOD POST (KIRIM FORMULIR)
+    # ==========================================
+    # Mengambil data berdasarkan atribut 'name' di klaim.html kamu
+    nama_klaim = request.form.get('nama_klaim')
+    nim_klaim = request.form.get('nim_klaim')
+    wa_klaim = request.form.get('wa_klaim')
+    bukti_detail = request.form.get('bukti_detail')
+    tanggal_sekarang = datetime.now().strftime("%Y-%m-%d %H:%M")
+    
+    # Validasi input tidak boleh kosong
+    if not nama_klaim or not nim_klaim or not wa_klaim or not bukti_detail:
+        conn.close()
+        flash("Semua kolom formulir wajib diisi!", "gagal")
+        return redirect(url_for('index', role=role_aktif))
+    
+    # Filter kata kasar/profanity filter
+    if mengandung_kata_kasar(nama_klaim) or mengandung_kata_kasar(bukti_detail):
+        conn.close()
+        flash("Permintaan ditolak! Harap tidak menggunakan kata-kata kasar.", "gagal")
+        return redirect(url_for('index', role=role_aktif))
+    
+    # 1. Simpan data ke tabel klaim
+    cursor.execute('''
+        INSERT INTO klaim (barang_id, nama_klaim, nim_klaim, wa_klaim, bukti_detail, tanggal_klaim)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (barang_id, nama_klaim, nim_klaim, wa_klaim, bukti_detail, tanggal_sekarang))
+    
+    # 2. Update status barang menjadi 'Dalam_Proses_Klaim'
+    cursor.execute("UPDATE barang SET tipe = 'Dalam_Proses_Klaim' WHERE id = ?", (barang_id,))
+    
+    conn.commit()
+    conn.close()
+    
+    flash("Informasi berhasil dikirim! Admin akan segera meninjau laporan Anda.", "sukses_pending")
+    return redirect(url_for('index', role=role_aktif))
+@app.route('/klaim_proses', methods=['POST'])
+def klaim_proses():
+
+    role_aktif = request.form.get('role', 'guest')
+    barang_id = request.form.get('barang_id')
+
+    nama_penemu = request.form.get('nama_penemu')
+    nim_penemu = request.form.get('nim_penemu')
+    wa_penemu = request.form.get('wa_penemu')
+    pesan_penemu = request.form.get('pesan_penemu')
+
+    if not all([barang_id, nama_penemu, nim_penemu, wa_penemu, pesan_penemu]):
+        flash("Semua kolom wajib diisi!", "gagal")
+        return redirect(url_for('index', role=role_aktif))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    tanggal_sekarang = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    cursor.execute('''
+        INSERT INTO klaim
+        (barang_id, nama_klaim, nim_klaim, wa_klaim, bukti_detail, tanggal_klaim)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (
+        barang_id,
+        nama_penemu,
+        nim_penemu,
+        wa_penemu,
+        pesan_penemu,
+        tanggal_sekarang
+    ))
+
+    cursor.execute("""
+        UPDATE barang
+        SET tipe='Dalam_Proses_Klaim'
+        WHERE id=?
+    """, (barang_id,))
+
+    conn.commit()
+    conn.close()
+
+    flash("Informasi berhasil dikirim!", "sukses")
+    return redirect(url_for('index', role=role_aktif))
 # ==============================================================================
 # ROUTE BARU: MANAGEMENT KATEGORI (KHUSUS ADMIN)
 # ==============================================================================
@@ -389,7 +440,6 @@ def admin_klaim():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # 🟢 DI SINI PERBAIKANNYA: Ambil kolom barang.kontak AS kontak_pelapor lewat JOIN
     cursor.execute('''
         SELECT 
             klaim.*, 
@@ -414,7 +464,6 @@ def proses_klaim(klaim_id, tindakan):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Ambil data klaim spesifik yang sedang diproses berdasarkan klaim_id
     cursor.execute('''
         SELECT klaim.*, barang.kontak AS kontak_pelapor 
         FROM klaim 
@@ -427,23 +476,19 @@ def proses_klaim(klaim_id, tindakan):
         barang_id = klaim_data['barang_id']
         
         if tindakan == 'setujui':
-            # Ubah status barang jadi 'Done' (Selesai)
             cursor.execute("UPDATE barang SET tipe = 'Done' WHERE id = ?", (barang_id,))
             cursor.execute("DELETE FROM klaim WHERE id = ?", (klaim_id,))
             flash("Klaim berhasil disetujui! Status barang kini 'Selesai'.", "sukses")
             
         elif tindakan == 'tolak':
-            # Ambil kontak dari database barang untuk tahu tipe aslinya
             cursor.execute("SELECT kontak FROM barang WHERE id = ?", (barang_id,))
             barang_data = cursor.fetchone()
             
-            # Jika kolom kontak terisi, berarti itu barang 'Lost'. Jika kosong, berarti 'Found'
             if barang_data and barang_data['kontak']:
                 status_asal = 'Lost'
             else:
                 status_asal = 'Found'
                 
-            # Kembalikan status barang ke tipe aslinya secara akurat
             cursor.execute("UPDATE barang SET tipe = ? WHERE id = ?", (status_asal, barang_id))
             cursor.execute("DELETE FROM klaim WHERE id = ?", (klaim_id,))
             flash("Permintaan verifikasi ditolak. Barang dikembalikan ke daftar utama.", "info")

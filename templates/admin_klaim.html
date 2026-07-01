@@ -5,33 +5,124 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Verifikasi Klaim - Admin</title>
     <style>
+/* ==============================================================================
+   ANIMASI ELEMENT & TABEL VERIFIKASI (MENGGUNAKAN JALUR TERBARU)
+   ============================================================================== */
+
+/* Efek fade-in untuk memunculkan baris tabel secara halus saat halaman dimuat */
+.table-animasi tbody tr {
+    animation: fadeInUp 0.5s ease-out both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Base style untuk tombol aksi agar transisinya mulus */
+.btn-aksi {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+/* Efek khusus untuk tombol SETUJUI */
+.btn-setujui {
+    background-color: #10b981;
+    color: white;
+}
+
+.btn-setujui:hover {
+    background-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-setujui:active {
+    transform: translateY(1px);
+}
+
+/* Animasi denyut halus (pulse) khusus pada ikon centang */
+.btn-setujui:hover .icon-check {
+    animation: bounceDelay 0.4s ease-in-out infinite alternate;
+}
+
+/* Efek khusus untuk tombol TOLAK */
+.btn-tolak {
+    background-color: #e63946;
+    color: white;
+}
+
+.btn-tolak:hover {
+    background-color: #d62828;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(230, 57, 70, 0.4);
+    animation: gentleShake 0.5s ease-in-out infinite;
+}
+
+.btn-tolak:active {
+    transform: translateY(1px);
+}
+
+/* Keyframes untuk masing-masing animasi mikro */
+@keyframes bounceDelay {
+    from { transform: scale(1); }
+    to { transform: scale(1.2); }
+}
+
+@keyframes gentleShake {
+    0%, 100% { transform: translateY(-2px) rotate(0deg); }
+    25% { transform: translateY(-2px) rotate(-1deg); }
+    75% { transform: translateY(-2px) rotate(1deg); }
+}
+
+/* Tambahan Efek Loading Halus saat Tombol di-Klik */
+.btn-clicked {
+    pointer-events: none;
+    opacity: 0.6;
+    transform: scale(0.96) !important;
+    box-shadow: none !important;
+}
+</style>
+    <style>
     body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; padding: 20px; }
-    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .container { max-width: 1100px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     h2 { color: #1e293b; margin-top: 0; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
     th { background-color: #f8fafc; color: #64748b; }
     
-    /* Tambahan baru: Membuat isi kolom aksi berjejer ke samping dengan rapi */
-   td:last-child {
-    white-space: nowrap; /* Teks tombol tetap satu baris */
-    text-align: center;  /* Membuat tombol berada di tengah kolom */
-}
+    /* Membuat isi kolom aksi berjejer ke samping dengan rapi */
+    td:last-child {
+        white-space: nowrap; 
+        text-align: center;  
+    }
 
-/* KITA BUAT CONTAINER BARU DI DALAM TOMBOL AGAR BERBARIS RAPI */
-.action-container {
-    display: inline-flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: center;
-    vertical-align: middle;
-}
-
-    .btn-ya { background-color: #10b981; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
-    
-    /* Kita sesuaikan juga class .btn-black yang kamu pakai di tombol Tolak */
-    .btn-black { background-color: #64748b; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
-    .btn-tidak { background-color: #ef4444; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; }
+    /* CONTAINER DI DALAM TOMBOL AGAR BERBARIS RAPI */
+    .action-container {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        vertical-align: middle;
+    }
     
     .btn-back { display: inline-block; margin-bottom: 15px; color: #3b82f6; text-decoration: none; font-weight: bold; }
     </style>
@@ -39,12 +130,12 @@
 <body>
 
 <div class="container">
-    <a href="/?role={{ role }}" class="btn-back">⬅️ Kembali ke Dashboard Utama</a>
+    <a href="/index?role={{ role }}" class="btn-back">⬅️ Kembali ke Dashboard Utama</a>
     <h2>📋 Antrean Verifikasi Klaim & Penemuan</h2>
     <p>Periksa bukti identitas mahasiswa di bawah ini sebelum melakukan serah terima barang.</p>
 
     {% if daftar_klaim %}
-    <table>
+    <table class="table-animasi">
         <thead>
             <tr>
                 <th>Barang</th>
@@ -57,38 +148,65 @@
                 <th>Aksi</th>
             </tr>
         </thead>
-<tbody>
-    {% for klm in daftar_klaim %}
-    <tr>
-        <td><b>{{ klm.nama_barang }}</b></td>
-        <td>{{ klm.nama_klaim }}</td>
-        <td>{{ klm.nim_klaim }}</td>
-        <td><a href="https://wa.me/{{ klm.wa_klaim }}" target="_blank" style="color: #10b981; font-weight: bold;">{{ klm.wa_klaim }} ↗</a></td>
-        
-        <td>
-            {% if klm.kontak_pelapor %}
-                <a href="https://wa.me/{{ klm.kontak_pelapor }}" target="_blank" style="color: #0284c7; font-weight: bold;">{{ klm.kontak_pelapor }} ↗</a>
-            {% else %}
-                <span style="color: #a3a3a3; font-style: italic; font-size: 13px;">Tidak ada nomor</span>
-            {% endif %}
-        </td>
+        <tbody>
+            {% for klm in daftar_klaim %}
+            <tr>
+                <td><b>{{ klm.nama_barang }}</b></td>
+                <td>{{ klm.nama_klaim }}</td>
+                <td>{{ klm.nim_klaim }}</td>
+                <td><a href="https://wa.me/{{ klm.wa_klaim }}" target="_blank" style="color: #10b981; font-weight: bold;">{{ klm.wa_klaim }} ↗</a></td>
+                
+                <td>
+                    {% if klm.kontak_pelapor %}
+                        <a href="https://wa.me/{{ klm.kontak_pelapor }}" target="_blank" style="color: #0284c7; font-weight: bold;">{{ klm.kontak_pelapor }} ↗</a>
+                    {% else %}
+                        <span style="color: #a3a3a3; font-style: italic; font-size: 13px;">Tidak ada nomor</span>
+                    {% endif %}
+                </td>
 
-        <td style="max-width: 250px; font-style: italic;">"{{ klm.bukti_detail }}"</td>
-        <td>{{ klm.tanggal_klaim }}</td>
-        <td>
-            <div class="action-container">
-                <a href="/admin/proses_klaim/{{ klm.id }}/setujui?role={{ role }}" class="btn-ya" onclick="return confirm('Setujui klaim ini? Status barang akan berubah jadi Selesai.')">✓ Setujui</a>
-                <a href="/admin/proses_klaim/{{ klm.id }}/tolak?role={{ role }}" class="btn-black" onclick="return confirm('Tolak permintaan ini?')">❌ Tolak</a>
-            </div>
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
+                <td style="max-width: 250px; font-style: italic;">"{{ klm.bukti_detail }}"</td>
+                <td>{{ klm.tanggal_klaim }}</td>
+                <td>
+                    <div class="action-container">
+                        <a href="/admin/proses_klaim/{{ klm.id }}/setujui?role={{ role }}" 
+                           class="btn-aksi btn-setujui" 
+                           onclick="return konfirmasiAksi(this, 'Setujui klaim ini? Status barang akan berubah jadi Selesai.', 'Memproses...')">
+                            <span class="icon-check">✓</span> Setujui
+                        </a>
+                        
+                        <a href="/admin/proses_klaim/{{ klm.id }}/tolak?role={{ role }}" 
+                           class="btn-aksi btn-tolak" 
+                           onclick="return konfirmasiAksi(this, 'Tolak permintaan ini?', 'Menolak...')">
+                            <span>❌</span> Tolak
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
     {% else %}
-        <p style="text-align: center; color: #888; margin-top: 4px;">🎉 Tidak ada antrean klaim baru saat ini.</p>
+        <p style="text-align: center; color: #888; margin-top: 20px;">🎉 Tidak ada antrean klaim baru saat ini.</p>
     {% endif %}
 </div>
+
+<script>
+function konfirmasiAksi(elemen, pesanKonfirmasi, teksProses) {
+    if (confirm(pesanKonfirmasi)) {
+        // Tambahkan efek buram & kunci tombol agar tidak bisa double click
+        elemen.classList.add('btn-clicked');
+        
+        // Ubah teks tombol secara interaktif
+        if (elemen.classList.contains('btn-setujui')) {
+            elemen.innerHTML = `<span class="icon-check">⏳</span> ${teksProses}`;
+        } else {
+            elemen.innerHTML = `<span>⏳</span> ${teksProses}`;
+        }
+        return true;
+    }
+    return false;
+}
+</script>
 
 </body>
 </html>
