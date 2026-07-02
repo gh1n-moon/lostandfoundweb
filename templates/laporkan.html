@@ -22,6 +22,8 @@
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #007A33; outline: none; box-shadow: 0 0 0 3px rgba(0, 122, 51, 0.1); }
         .btn-submit { width: 100%; background-color: #007A33; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .btn-submit:hover { background-color: #006428; }
+        .btn-foto{ width:100%; padding:12px;margin-bottom:8px;border:none;border-radius:8px;cursor:pointer;background:#007A33;color:white;font-weight:bold;
+}
     </style>
 </head>
 <body>
@@ -86,21 +88,29 @@
            required>
 </div>
 <div class="form-group">
-    <label for="foto_barang">📷 Foto Barang (Opsional)</label>
+    <label>📷 Foto Barang (Opsional)</label>
+
+    <button type="button" onclick="document.getElementById('kamera').click()" class="btn-foto">
+        📷 Buka Kamera
+    </button>
+
+    <button type="button" onclick="document.getElementById('galeri').click()" class="btn-foto">
+        🖼️ Pilih dari Galeri
+    </button>
 
     <input type="file"
-           id="foto_barang"
+           id="kamera"
            name="foto_barang"
            accept="image/*"
-           style="padding:10px;
-                  border:1px solid #ddd;
-                  border-radius:6px;
-                  width:100%;
-                  background:white;">
+           capture="environment"
+           style="display:none;">
 
-    <small style="display:block; margin-top:6px; color:#666;">
-        Pilih foto dari galeri atau ambil foto menggunakan kamera.
-    </small>
+    <input type="file"
+           id="galeri"
+           accept="image/*"
+           style="display:none;">
+
+    <div id="namaFile" style="margin-top:10px;color:#666;"></div>
 </div>
 <button type="submit" class="btn-submit">Kirim Laporan</button>
 </form>
