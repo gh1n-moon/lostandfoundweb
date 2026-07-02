@@ -23,79 +23,7 @@
         .btn-submit { width: 100%; background-color: #007A33; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .btn-submit:hover { background-color: #006428; }
         .btn-foto{ width:100%; padding:12px;margin-bottom:8px;border:none;border-radius:8px;cursor:pointer;background:#007A33;color:white;font-weight:bold;
-        .upload-box{
-    margin-top:10px;
 }
-
-.upload-buttons{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-}
-
-.btn-upload{
-    flex:1;
-    border:none;
-    padding:12px;
-    border-radius:8px;
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
-    transition:0.3s;
-}
-
-.kamera-btn{
-    background:#007A33;
-}
-
-.galeri-btn{
-    background:#0d6efd;
-}
-
-.btn-upload:hover{
-    transform:translateY(-2px);
-    opacity:0.95;
-}
-
-.preview-container{
-    margin-top:15px;
-    display:none;
-    position:relative;
-}
-
-.preview-container img{
-    width:100%;
-    max-height:350px;
-    object-fit:contain;
-    border-radius:12px;
-    border:2px solid #ddd;
-    background:white;
-    padding:5px;
-    cursor:pointer;
-}
-
-.hapus-foto{
-    position:absolute;
-    top:10px;
-    right:10px;
-    width:35px;
-    height:35px;
-    border:none;
-    border-radius:50%;
-    background:red;
-    color:white;
-    font-size:16px;
-    cursor:pointer;
-}
-
-.info-foto{
-    margin-top:10px;
-    text-align:center;
-    color:#555;
-    font-size:14px;
-    font-weight:600;
-}
-        }
     </style>
 </head>
 <body>
@@ -162,48 +90,53 @@
 <div class="form-group">
     <label>📷 Foto Barang (Opsional)</label>
 
-    <div class="upload-box">
+    <button type="button" onclick="document.getElementById('kamera').click()" class="btn-foto">
+        📷 Buka Kamera
+    </button>
 
-        <!-- Input Kamera -->
-        <input type="file"
-               id="kamera"
-               name="foto_barang"
-               accept="image/*"
-               capture="environment"
-               hidden>
+    <button type="button" onclick="document.getElementById('galeri').click()" class="btn-foto">
+        🖼️ Pilih dari Galeri
+    </button>
+<!-- Preview Foto -->
+<div id="previewContainer" style="display:none; margin-top:15px;">
+    <p style="font-weight:bold; margin-bottom:8px;">
+        Preview Foto:
+    </p>
 
-        <!-- Input Galeri -->
-        <input type="file"
-               id="galeri"
-               accept="image/*"
-               hidden>
+    <img id="previewFoto"
+         src=""
+         alt="Preview"
+         style="
+            width:100%;
+            max-height:300px;
+            object-fit:contain;
+            border:2px solid #ddd;
+            border-radius:10px;
+            background:#f8f8f8;
+            padding:5px;
+         ">
+</div>
 
-        <div class="upload-buttons">
-            <button type="button" class="btn-upload kamera-btn"
-                    onclick="document.getElementById('kamera').click()">
-                📷 Buka Kamera
-            </button>
+<p id="namaFile"
+   style="
+      margin-top:10px;
+      font-size:14px;
+      color:#555;
+      text-align:center;
+   ">
+</p>
+    <input type="file"
+           id="kamera"
+           name="foto_barang"
+           accept="image/*"
+           capture="environment"
+           style="display:none;">
 
-            <button type="button" class="btn-upload galeri-btn"
-                    onclick="document.getElementById('galeri').click()">
-                🖼 Pilih dari Galeri
-            </button>
-        </div>
-
-        <!-- Preview -->
-        <div id="previewContainer" class="preview-container">
-            <img id="previewFoto" src="" alt="Preview">
-
-            <button type="button"
-                    class="hapus-foto"
-                    onclick="hapusFoto()">
-                ✖
-            </button>
-        </div>
-
-        <div id="infoFoto" class="info-foto"></div>
-
-    </div>
+    <input type="file"
+           id="galeri"
+           accept="image/*"
+           style="display:none;">       
+    <div id="namaFile" style="margin-top:10px;color:#666;"></div>
 </div>
 <button type="submit" class="btn-submit">Kirim Laporan</button>
 </form>
@@ -242,89 +175,54 @@ function formatWhatsApp() {
 
     inputWa.value = value;
 }
-</script>
-
-<!-- SCRIPT KAMERA & GALERI -->
 <script>
 const kamera = document.getElementById('kamera');
 const galeri = document.getElementById('galeri');
 
-const previewContainer =
-document.getElementById('previewContainer');
+const namaFile = document.getElementById('namaFile');
+const previewFoto = document.getElementById('previewFoto');
+const previewContainer = document.getElementById('previewContainer');
 
-const previewFoto =
-document.getElementById('previewFoto');
+kamera.addEventListener('change', tampilPreviewKamera);
+galeri.addEventListener('change', tampilPreviewGaleri);
 
-const infoFoto =
-document.getElementById('infoFoto');
-
-kamera.addEventListener('change', prosesFoto);
-galeri.addEventListener('change', prosesGaleri);
-
-function prosesGaleri(){
-
-    if(galeri.files.length > 0){
+function tampilPreviewGaleri() {
+    if (galeri.files.length > 0) {
 
         const file = galeri.files[0];
 
+        namaFile.innerHTML = "📁 " + file.name;
+
         const dt = new DataTransfer();
         dt.items.add(file);
-
         kamera.files = dt.files;
 
-        tampilkanFoto(file);
+        tampilPreview(file);
     }
 }
 
-function prosesFoto(){
+function tampilPreviewKamera() {
+    if (kamera.files.length > 0) {
 
-    if(kamera.files.length > 0){
-        tampilkanFoto(kamera.files[0]);
+        const file = kamera.files[0];
+
+        namaFile.innerHTML = "📷 " + file.name;
+
+        tampilPreview(file);
     }
 }
 
-function tampilkanFoto(file){
+function tampilPreview(file) {
 
     const reader = new FileReader();
 
-    reader.onload = function(e){
-
+    reader.onload = function(e) {
         previewFoto.src = e.target.result;
-
         previewContainer.style.display = "block";
-
-        let ukuran =
-        (file.size / 1024 / 1024).toFixed(2);
-
-        infoFoto.innerHTML =
-        `
-        📄 ${file.name}<br>
-        📦 ${ukuran} MB
-        `;
     }
 
     reader.readAsDataURL(file);
 }
-
-function hapusFoto(){
-
-    kamera.value = "";
-    galeri.value = "";
-
-    previewFoto.src = "";
-
-    previewContainer.style.display = "none";
-
-    infoFoto.innerHTML = "";
-}
-
-previewFoto.addEventListener("click", function(){
-
-    if(previewFoto.src){
-        window.open(previewFoto.src, "_blank");
-    }
-
-});
 </script>
 
 </body>
