@@ -151,5 +151,32 @@ function formatWhatsApp() {
 }
 </script>
 
+<!-- SCRIPT KAMERA & GALERI -->
+<script>
+const kamera = document.getElementById('kamera');
+const galeri = document.getElementById('galeri');
+const namaFile = document.getElementById('namaFile');
+
+kamera.addEventListener('change', tampilNama);
+galeri.addEventListener('change', sinkronFile);
+
+function sinkronFile(){
+    if(galeri.files.length > 0){
+        namaFile.innerHTML = "📁 " + galeri.files[0].name;
+
+        const dt = new DataTransfer();
+        dt.items.add(galeri.files[0]);
+
+        kamera.files = dt.files;
+    }
+}
+
+function tampilNama(){
+    if(kamera.files.length > 0){
+        namaFile.innerHTML = "📷 " + kamera.files[0].name;
+    }
+
+</script>
+
 </body>
 </html>
