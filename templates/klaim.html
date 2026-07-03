@@ -32,7 +32,7 @@
         <strong>Lokasi di Laporan:</strong> {{ item.lokasi }}
     </div>
 
-    <form action="{{ url_for('klaim', barang_id=item.id, role=role) }}" method="POST">
+    <form action="{{ url_for('klaim_proses') }}" method="POST">
         <div class="form-group">
             <label for="nama_klaim">Nama Lengkap Anda</label>
             <input type="text" id="nama_klaim" name="nama_klaim" placeholder="Masukkan nama lengkap" required>
@@ -65,6 +65,7 @@
             <button type="submit" class="btn-submit" style="background-color: #0284c7;">Kirim Info Penemuan</button>
         {% endif %}
     </form>
+    <input type="hidden" name="barang_id" value="{{ item.id }}">
 
     <a href="{{ url_for('index', role=role) }}" class="btn-back">⬅️ Kembali ke Halaman Utama</a>
 </div>

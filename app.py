@@ -310,95 +310,39 @@ def laporkan():
 # ==============================================================================
 # FITUR 3: PROSES KLAIM DINAMIS (POST LEWAT MODAL POP-UP / HALAMAN TERPISAH)
 # ==============================================================================
-@app.route('/klaim/<int:barang_id>', methods=['GET', 'POST'])
-def klaim(barang_id):
-    role_aktif = "admin" if session.get("admin") else "guest"
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Ambil data barang berdasarkan ID
-    cursor.execute("SELECT * FROM barang WHERE id = ?", (barang_id,))
-    barang_data = cursor.fetchone()
-    
-    if not barang_data:
-        conn.close()
-        flash("Data barang tidak ditemukan!", "gagal")
-        return redirect(url_for('index'))
-        
-    # ==========================================
-    # PROSES METHOD GET (MENAMPILKAN HALAMAN)
-    # ==========================================
-    if request.method == 'GET':
-        conn.close()
-        # Menggunakan 'item=barang_data' agar pas dengan variabel {{ item }} di klaim.html
-        return render_template('klaim.html', item=barang_data, role=role_aktif)
-
-    # ==========================================
-    # PROSES METHOD POST (KIRIM FORMULIR)
-    # ==========================================
-    # Mengambil data berdasarkan atribut 'name' di klaim.html kamu
-    nama_klaim = request.form.get('nama_klaim')
-    nim_klaim = request.form.get('nim_klaim')
-    wa_klaim = request.form.get('wa_klaim')
-    bukti_detail = request.form.get('bukti_detail')
-    tanggal_sekarang = datetime.now().strftime("%Y-%m-%d %H:%M")
-    
-    # Validasi input tidak boleh kosong
-    if not nama_klaim or not nim_klaim or not wa_klaim or not bukti_detail:
-        conn.close()
-        flash("Semua kolom formulir wajib diisi!", "gagal")
-        return redirect(url_for('index'))
-    
-    # Filter kata kasar/profanity filter
-    if mengandung_kata_kasar(nama_klaim) or mengandung_kata_kasar(bukti_detail):
-        conn.close()
-        flash("Permintaan ditolak! Harap tidak menggunakan kata-kata kasar.", "gagal")
-        return redirect(url_for('index'))
-    
-    # 1. Simpan data ke tabel klaim
-    cursor.execute('''
-        INSERT INTO klaim (barang_id, nama_klaim, nim_klaim, wa_klaim, bukti_detail, tanggal_klaim)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (barang_id, nama_klaim, nim_klaim, wa_klaim, bukti_detail, tanggal_sekarang))
-    
-    # 2. Update status barang menjadi 'Dalam_Proses_Klaim'
-    cursor.execute("UPDATE barang SET tipe = 'Dalam_Proses_Klaim' WHERE id = ?", (barang_id,))
-    
-    conn.commit()
-    conn.close()
-    
-    flash("Informasi berhasil dikirim! Admin akan segera meninjau laporan Anda.", "sukses_pending")
-    return redirect(url_for('index'))
 @app.route('/klaim_proses', methods=['POST'])
 def klaim_proses():
+    print("=== MASUK ROUTE KLAIM ===")
+    print(request.form)
 
-    role_aktif = "admin" if session.get("admin") else "guest"
-    barang_id = request.form.get('barang_id')
+    barang_id = request.form.get("barang_id")
 
-    nama_penemu = request.form.get('nama_penemu')
-    nim_penemu = request.form.get('nim_penemu')
-    wa_penemu = request.form.get('wa_penemu')
-    pesan_penemu = request.form.get('pesan_penemu')
+    nama = request.form.get("nama_pengklaim")
+    nim = request.form.get("nim_pengklaim")
+    wa = request.form.get("wa_pengklaim")
+    pesan = request.form.get("pesan_pengklaim")
 
-    if not all([barang_id, nama_penemu, nim_penemu, wa_penemu, pesan_penemu]):
+    print(barang_id, nama, nim, wa, pesan)
+
+    if not all([barang_id, nama, nim, wa, pesan]):
         flash("Semua kolom wajib diisi!", "gagal")
-        return redirect(url_for('index'))
+        return redirect(url_for("index"))
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     tanggal_sekarang = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    cursor.execute('''
+    cursor.execute("""
         INSERT INTO klaim
         (barang_id, nama_klaim, nim_klaim, wa_klaim, bukti_detail, tanggal_klaim)
         VALUES (?, ?, ?, ?, ?, ?)
-    ''', (
+    """, (
         barang_id,
-        nama_penemu,
-        nim_penemu,
-        wa_penemu,
-        pesan_penemu,
+        nama,
+        nim,
+        wa,
+        pesan,
         tanggal_sekarang
     ))
 
@@ -411,8 +355,8 @@ def klaim_proses():
     conn.commit()
     conn.close()
 
-    flash("Informasi berhasil dikirim!", "sukses")
-    return redirect(url_for('index'))
+    flash("Informasi berhasil dikirim!", "sukses_pending")
+    return redirect(url_for("index"))
 # ==============================================================================
 # ROUTE BARU: MANAGEMENT KATEGORI (KHUSUS ADMIN)
 # ==============================================================================
