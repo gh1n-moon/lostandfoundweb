@@ -23,7 +23,25 @@
         .btn-submit { width: 100%; background-color: #007A33; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .btn-submit:hover { background-color: #006428; }
         .btn-foto{ width:100%; padding:12px;margin-bottom:8px;border:none;border-radius:8px;cursor:pointer;background:#007A33;color:white;font-weight:bold;
+        #previewContainer{
+    animation: muncul .3s ease;
 }
+
+@keyframes muncul{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+#previewFoto{
+    box-shadow:0 4px 15px rgba(0,0,0,.15);
+}
+        }
     </style>
 </head>
 <body>
@@ -49,7 +67,10 @@
 {% endif %}
 
     
-     <form action="/laporkan?role={{ role }}" method="POST" enctype="multipart/form-data">
+     <form id="lostFoundForm"
+      action="/laporkan?role={{ role }}"
+      method="POST"
+      enctype="multipart/form-data">
         <div class="form-group">
             <label>Jenis Laporan</label>
             <select name="tipe" required>
@@ -98,23 +119,51 @@
         🖼️ Pilih dari Galeri
     </button>
 <!-- Preview Foto -->
-<div id="previewContainer" style="display:none; margin-top:15px;">
-    <p style="font-weight:bold; margin-bottom:8px;">
-        Preview Foto:
+<!-- Preview -->
+<div id="previewContainer" style="display:none;margin-top:18px;">
+
+    <p style="font-weight:bold;margin-bottom:10px;">
+        Preview Foto
     </p>
 
     <img id="previewFoto"
          src=""
-         alt="Preview"
          style="
             width:100%;
-            max-height:300px;
+            max-height:320px;
             object-fit:contain;
-            border:2px solid #ddd;
-            border-radius:10px;
-            background:#f8f8f8;
-            padding:5px;
+            border:3px solid #007A33;
+            border-radius:12px;
+            background:#f7f7f7;
+            padding:8px;
          ">
+
+    <p id="namaFile"
+       style="
+            margin-top:10px;
+            color:#555;
+            text-align:center;
+            font-size:14px;
+       ">
+    </p>
+
+    <button
+        type="button"
+        onclick="hapusFoto()"
+        style="
+            width:100%;
+            margin-top:12px;
+            padding:10px;
+            background:#dc3545;
+            color:white;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:bold;
+        ">
+        ❌ Hapus Foto
+    </button>
+
 </div>
 
 <p id="namaFile"
@@ -126,17 +175,17 @@
    ">
 </p>
     <input type="file"
-           id="kamera"
-           name="foto_barang"
-           accept="image/*"
-           capture="environment"
-           style="display:none;">
+       id="kamera"
+       name="foto_barang"
+       accept="image/*"
+       capture="environment"
+       style="display:none;">
 
     <input type="file"
-           id="galeri"
-           accept="image/*"
-           style="display:none;">       
-    <div id="namaFile" style="margin-top:10px;color:#666;"></div>
+       id="galeri"
+       name="foto_barang"
+       accept="image/*"
+       style="display:none;">    
 </div>
 <button type="submit" class="btn-submit">Kirim Laporan</button>
 </form>
@@ -175,54 +224,53 @@ function formatWhatsApp() {
 
     inputWa.value = value;
 }
+</script>
 <script>
-const kamera = document.getElementById('kamera');
-const galeri = document.getElementById('galeri');
 
-const namaFile = document.getElementById('namaFile');
-const previewFoto = document.getElementById('previewFoto');
-const previewContainer = document.getElementById('previewContainer');
+const kamera = document.getElementById("kamera");
+const galeri = document.getElementById("galeri");
 
-kamera.addEventListener('change', tampilPreviewKamera);
-galeri.addEventListener('change', tampilPreviewGaleri);
+kamera.addEventListener("change", previewFoto);
+galeri.addEventListener("change", previewFoto);
 
-function tampilPreviewGaleri() {
-    if (galeri.files.length > 0) {
+function previewFoto(event){
 
-        const file = galeri.files[0];
+    const file = event.target.files[0];
 
-        namaFile.innerHTML = "📁 " + file.name;
+    if(!file) return;
 
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        kamera.files = dt.files;
+    // tampilkan nama file
+    document.getElementById("namaFile").innerHTML =
+        "📄 " + file.name;
 
-        tampilPreview(file);
-    }
-}
-
-function tampilPreviewKamera() {
-    if (kamera.files.length > 0) {
-
-        const file = kamera.files[0];
-
-        namaFile.innerHTML = "📷 " + file.name;
-
-        tampilPreview(file);
-    }
-}
-
-function tampilPreview(file) {
-
+    // preview gambar
     const reader = new FileReader();
 
-    reader.onload = function(e) {
-        previewFoto.src = e.target.result;
-        previewContainer.style.display = "block";
+    reader.onload = function(e){
+
+        document.getElementById("previewFoto").src = e.target.result;
+
+        document.getElementById("previewContainer").style.display = "block";
+
     }
 
     reader.readAsDataURL(file);
+
 }
+
+function hapusFoto(){
+
+    kamera.value = "";
+    galeri.value = "";
+
+    document.getElementById("previewFoto").src = "";
+
+    document.getElementById("namaFile").innerHTML = "";
+
+    document.getElementById("previewContainer").style.display = "none";
+
+}
+
 </script>
 
 </body>

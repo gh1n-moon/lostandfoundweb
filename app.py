@@ -6,6 +6,16 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "kunci_rahasia_lostfound_unipol"
+from functools import wraps
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get("admin"):
+            flash("Silakan login sebagai Admin terlebih dahulu!", "gagal")
+            return redirect(url_for("welcome"))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Tentukan tempat penyimpanan folder foto (masuk ke static/uploads)
 UPLOAD_FOLDER = 'static/uploads'
@@ -110,27 +120,33 @@ init_db()
 
 # ==============================================================================
 # ROUTES UTAMA
-# ==============================================================================
+# ==============================================================================     
 @app.route('/', methods=['GET', 'POST'])
 def welcome():
     pesan_error = None
+
     if request.method == 'POST':
         password_input = request.form.get('password')
-        
-        if password_input == 'admin123': 
-            return redirect(url_for('index', role='admin'))
-        else:
-            pesan_error = "Kata sandi Admin salah! Silakan coba lagi."
-            
-    return render_template('welcome.html', error=pesan_error)
 
+        if password_input == 'admin123':
+            session['admin'] = True
+            print(session)  
+            return redirect(url_for('index'))
+        else:
+            session.pop('admin', None)
+            pesan_error = "Kata sandi Admin salah!"
+
+    return render_template('welcome.html', error=pesan_error)
 @app.route('/index')
 def index():
     status_tab = request.args.get('status', 'all')
     kategori_filter = request.args.get('kategori', '')
     pencarian = request.args.get('search', '').lower()
-    role_aktif = request.args.get('role', 'guest')
-    
+    role_aktif = "admin" if session.get("admin") else "guest"
+    print("SESSION =", session)
+    print("ADMIN =", session.get("admin"))
+    print(session)
+    print(role_aktif)
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -200,37 +216,48 @@ def index():
 # FITUR 2: AKSI APPROVAL ADMIN (SETUJUI DAN TOLAK)
 # ==============================================================================
 @app.route('/setujui/<int:barang_id>')
+@admin_required
 def setujui(barang_id):
-    role_aktif = request.args.get('role', 'guest')
-    if role_aktif == 'admin':
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT tipe FROM barang WHERE id = ?", (barang_id,))
-        row = cursor.fetchone()
-        if row:
-            tipe_asli = row['tipe'].split('_')[1] 
-            cursor.execute("UPDATE barang SET tipe = ? WHERE id = ?", (tipe_asli, barang_id))
-            conn.commit()
-        conn.close()
-    return redirect(url_for('index', status='Pending', role=role_aktif))
 
-@app.route('/hapus/<int:barang_id>')
-def hapus(barang_id):
-    role_aktif = request.args.get('role', 'guest')
-    if role_aktif == 'admin':
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM barang WHERE id = ?", (barang_id,))
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT tipe FROM barang WHERE id=?", (barang_id,))
+    row = cursor.fetchone()
+
+    if row:
+        tipe_asli = row["tipe"].replace("Pending_", "")
+        cursor.execute(
+            "UPDATE barang SET tipe=? WHERE id=?",
+            (tipe_asli, barang_id)
+        )
         conn.commit()
-        conn.close()
-    return redirect(url_for('index', status=request.args.get('status', 'all'), role=role_aktif))
 
+    conn.close()
+
+    return redirect(url_for("index", status="Pending"))
+@app.route('/hapus/<int:barang_id>')
+@admin_required
+def hapus(barang_id):
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM barang WHERE id=?",
+        (barang_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("index"))
 # ==============================================================================
 # HALAMAN LAPOR BARANG BARU (DENGAN DROP-DOWN KATEGORI DINAMIS)
 # ==============================================================================
 @app.route('/laporkan', methods=['GET', 'POST'])
 def laporkan():
-    role_aktif = request.args.get('role', 'guest')
+    role_aktif = "admin" if session.get("admin") else "guest"
     pesan_error = None
     
     conn = get_db_connection()
@@ -272,7 +299,7 @@ def laporkan():
         conn.close()
         
         flash("Laporan Anda berhasil dikirim! Laporan sedang berada dalam antrean peninjauan Admin sebelum diterbitkan ke publik.", "sukses_pending")
-        return redirect(url_for('index', role=role_aktif))
+        return redirect(url_for('index'))
 
     cursor.execute("SELECT * FROM daftar_kategori ORDER BY id ASC")
     kategori_db = cursor.fetchall()
@@ -285,7 +312,7 @@ def laporkan():
 # ==============================================================================
 @app.route('/klaim/<int:barang_id>', methods=['GET', 'POST'])
 def klaim(barang_id):
-    role_aktif = request.args.get('role', 'guest')
+    role_aktif = "admin" if session.get("admin") else "guest"
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -296,7 +323,7 @@ def klaim(barang_id):
     if not barang_data:
         conn.close()
         flash("Data barang tidak ditemukan!", "gagal")
-        return redirect(url_for('index', role=role_aktif))
+        return redirect(url_for('index'))
         
     # ==========================================
     # PROSES METHOD GET (MENAMPILKAN HALAMAN)
@@ -320,13 +347,13 @@ def klaim(barang_id):
     if not nama_klaim or not nim_klaim or not wa_klaim or not bukti_detail:
         conn.close()
         flash("Semua kolom formulir wajib diisi!", "gagal")
-        return redirect(url_for('index', role=role_aktif))
+        return redirect(url_for('index'))
     
     # Filter kata kasar/profanity filter
     if mengandung_kata_kasar(nama_klaim) or mengandung_kata_kasar(bukti_detail):
         conn.close()
         flash("Permintaan ditolak! Harap tidak menggunakan kata-kata kasar.", "gagal")
-        return redirect(url_for('index', role=role_aktif))
+        return redirect(url_for('index'))
     
     # 1. Simpan data ke tabel klaim
     cursor.execute('''
@@ -341,11 +368,11 @@ def klaim(barang_id):
     conn.close()
     
     flash("Informasi berhasil dikirim! Admin akan segera meninjau laporan Anda.", "sukses_pending")
-    return redirect(url_for('index', role=role_aktif))
+    return redirect(url_for('index'))
 @app.route('/klaim_proses', methods=['POST'])
 def klaim_proses():
 
-    role_aktif = request.form.get('role', 'guest')
+    role_aktif = "admin" if session.get("admin") else "guest"
     barang_id = request.form.get('barang_id')
 
     nama_penemu = request.form.get('nama_penemu')
@@ -355,7 +382,7 @@ def klaim_proses():
 
     if not all([barang_id, nama_penemu, nim_penemu, wa_penemu, pesan_penemu]):
         flash("Semua kolom wajib diisi!", "gagal")
-        return redirect(url_for('index', role=role_aktif))
+        return redirect(url_for('index'))
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -385,16 +412,14 @@ def klaim_proses():
     conn.close()
 
     flash("Informasi berhasil dikirim!", "sukses")
-    return redirect(url_for('index', role=role_aktif))
+    return redirect(url_for('index'))
 # ==============================================================================
 # ROUTE BARU: MANAGEMENT KATEGORI (KHUSUS ADMIN)
 # ==============================================================================
-@app.route('/admin/kategori', methods=['GET', 'POST'])
+@app.route('/admin/kategori', methods=['GET','POST'])
+@admin_required
 def kelola_kategori():
-    role_aktif = request.args.get('role', 'guest')
-    if role_aktif != 'admin':
-        return redirect(url_for('index', role=role_aktif))
-        
+    role_aktif = "admin"
     conn = get_db_connection()
     cursor = conn.cursor()
     pesan_error = None
@@ -417,26 +442,28 @@ def kelola_kategori():
     return render_template('kelola_kategori.html', role=role_aktif, kategori_list=kategori_db, error=pesan_error)
 
 @app.route('/admin/kategori/hapus/<int:kat_id>')
+@admin_required
 def hapus_kategori(kat_id):
-    role_aktif = request.args.get('role', 'guest')
-    if role_aktif == 'admin':
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM daftar_kategori WHERE id = ?", (kat_id,))
-        conn.commit()
-        conn.close()
-    return redirect(url_for('kelola_kategori', role=role_aktif))
 
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM daftar_kategori WHERE id=?",
+        (kat_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for("kelola_kategori"))
 # ==============================================================================
 # FITUR: HALAMAN DAFTAR ANTRIAN KLAIM (SISI ADMIN)
 # ==============================================================================
 @app.route('/admin/klaim')
+@admin_required
 def admin_klaim():
-    role_aktif = request.args.get('role', 'guest')
-    if role_aktif != 'admin':
-        flash("Akses ditolak! Anda bukan admin.", "gagal")
-        return redirect(url_for('index'))
-        
+    role_aktif = "admin" 
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -456,11 +483,11 @@ def admin_klaim():
     return render_template('admin_klaim.html', daftar_klaim=daftar_klaim, role=role_aktif)
 
 @app.route('/admin/proses_klaim/<int:klaim_id>/<string:tindakan>')
+@admin_required
 def proses_klaim(klaim_id, tindakan):
-    role_aktif = request.args.get('role', 'guest')
-    if role_aktif != 'admin':
-        return "Akses Ditolak", 403
-        
+
+    role_aktif = "admin"
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -495,7 +522,12 @@ def proses_klaim(klaim_id, tindakan):
             
         conn.commit()
     conn.close()
-    return redirect(url_for('admin_klaim', role=role_aktif))
+    return redirect(url_for('admin_klaim'))
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash("Berhasil logout.", "info")
+    return redirect(url_for('welcome'))
 
 if __name__ == '__main__':
     app.run(debug=True)

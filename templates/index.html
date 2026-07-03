@@ -435,11 +435,25 @@
     {% endwith %}
     
     <div class="role-badge-container">
-        {% if role == 'admin' %}
+        {% if session.get('admin') %}
             <span class="role-badge admin-mode">Mode Akses: 🔐 Administrator</span>
         {% else %}
             <span class="role-badge">Mode Akses: 👥 Guest</span>
         {% endif %}
+     {% if session.get('admin') %}
+<a href="{{ url_for('logout') }}"
+style="
+background:#dc2626;
+color:white;
+padding:8px 16px;
+border-radius:8px;
+text-decoration:none;
+font-weight:bold;
+margin-left:10px;
+">
+🚪 Logout Admin
+</a>
+{% endif %}
     </div>
 
     <div class="tips-banner">
@@ -450,23 +464,42 @@
     </div>
 
     <div class="nav-wrapper">
-        <div class="pills-container">
-            <a href="/index?status=all&role={{ role }}" class="pill-btn {% if tab_aktif == 'all' %}active{% endif %}">Halaman Utama</a>
-            <a href="/index?status=Lost&role={{ role }}" class="pill-btn {% if tab_aktif == 'Lost' %}active{% endif %}">Laporan Kehilangan</a>
-            <a href="/index?status=Found&role={{ role }}" class="pill-btn {% if tab_aktif == 'Found' %}active{% endif %}">Laporan Penemuan</a>
-            <a href="/index?status=Done&role={{ role }}" class="pill-btn {% if tab_aktif == 'Done' %}active{% endif %}">Riwayat Selesai</a>
-            
-            {% if role == 'admin' %}
-                <a href="/index?status=Pending&role={{ role }}" class="pill-btn btn-pending-admin {% if tab_aktif == 'Pending' %}active{% endif %}">
-                    Antrean Persetujuan <span style="background-color: #dc3545; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; margin-left: 5px; font-weight: bold;">{{ pending_count }}</span>
-                </a>
-            {% endif %}
-        </div>
+       <div class="pills-container">
+    <a href="{{ url_for('index', status='all') }}"
+       class="pill-btn {% if tab_aktif == 'all' %}active{% endif %}">
+       Halaman Utama
+    </a>
 
-        {% if role == 'admin' %}
+    <a href="{{ url_for('index', status='Lost') }}"
+       class="pill-btn {% if tab_aktif == 'Lost' %}active{% endif %}">
+       Laporan Kehilangan
+    </a>
+
+    <a href="{{ url_for('index', status='Found') }}"
+       class="pill-btn {% if tab_aktif == 'Found' %}active{% endif %}">
+       Laporan Penemuan
+    </a>
+
+    <a href="{{ url_for('index', status='Done') }}"
+       class="pill-btn {% if tab_aktif == 'Done' %}active{% endif %}">
+       Riwayat Selesai
+    </a>
+
+    {% if session.get('admin') %}
+    <a href="{{ url_for('index', status='Pending') }}"
+       class="pill-btn btn-pending-admin {% if tab_aktif == 'Pending' %}active{% endif %}">
+        Antrean Persetujuan
+        <span style="background:#dc3545;color:white;border-radius:50%;padding:2px 6px;font-size:11px;margin-left:5px;">
+            {{ pending_count }}
+        </span>
+    </a>
+    {% endif %}
+</div>
+
+        {% if session.get('admin') %}
             <div class="admin-actions-container">
-                <a href="/admin/klaim?role={{ role }}" class="btn-verifikasi-nav">📋 Verifikasi Klaim</a>
-                <a href="{{ url_for('kelola_kategori', role=role) }}" class="btn-gear-admin" title="Kelola Kategori">
+                <a href="/admin/klaim" class="btn-verifikasi-nav">📋 Verifikasi Klaim</a>
+                <a href="{{ url_for('kelola_kategori') }}" class="btn-gear-admin" title="Kelola Kategori">
                     <span class="gear-icon">⚙️</span>
                 </a>
             </div>
@@ -476,7 +509,7 @@
     <div class="toolbar-renovated">
         <form action="/index" method="GET" class="search-form">
             <input type="hidden" name="status" value="{{ tab_aktif }}">
-            <input type="hidden" name="role" value="{{ role }}"> 
+            <!-- Hapus saja --> 
             <input type="text" name="search" placeholder="🔍 Cari nama barang..." value="{{ cari }}">
             <select name="kategori" onchange="this.form.submit()">
                  <option value="">-- Semua Kategori --</option>
@@ -486,11 +519,11 @@
             </select>
             <button type="submit" class="btn-search">Cari</button>
             {% if cari or kategori_aktif %}
-                <a href="/index?status={{ tab_aktif }}&role={{ role }}" class="btn-reset">Reset</a>
+                <a href="{{ url_for('index') }}" class="btn-reset">Reset</a>
             {% endif %}
         </form>
 
-        <a href="/laporkan?role={{ role }}" class="btn-report-action">
+        <a href="{{ url_for('laporkan') }}" class="btn-report-action">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> 
             Laporkan Item
         </a>
@@ -529,10 +562,10 @@
             
             <div class="actions-group" style="width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
                 {% if 'Pending_' in item.tipe %}
-                    {% if role == 'admin' %}
+                    {% if session.get('admin') %}
                         <div style="display: flex; gap: 8px; width: 100%;">
-                            <a href="/setujui/{{ item.id }}?role={{ role }}" class="btn-approve-action" style="flex: 1; text-align: center;" onclick="return confirm('Setujui laporan ini untuk dipublikasikan?')">✓ Setujui</a>
-                            <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-delete" style="padding: 10px 15px;" title="Tolak Laporan" onclick="return confirm('Apakah Anda yakin ingin menolak & menghapus laporan ini?')">❌ Tolak</a>
+                            <a href="/setujui/{{ item.id }}" class="btn-approve-action" style="flex: 1; text-align: center;" onclick="return confirm('Setujui laporan ini untuk dipublikasikan?')">✓ Setujui</a>
+                            <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}" class="btn-delete" style="padding: 10px 15px;" title="Tolak Laporan" onclick="return confirm('Apakah Anda yakin ingin menolak & menghapus laporan ini?')">❌ Tolak</a>
                         </div>
                     {% endif %}
                 {% else %}
@@ -557,8 +590,8 @@
                         <p style="color: #2e7d32; font-weight: bold; font-size: 13px; text-align: center; width: 100%; margin-bottom: 5px;">✓ Kasus Ditutup</p>
                     {% endif %}
 
-                    {% if role == 'admin' %}
-                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-click-effect" style="margin-top: 2px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 11px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini secara permanen?')">🗑️ Hapus Item</a>
+                    {% if session.get('admin') %}
+                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}" class="btn-click-effect" style="margin-top: 2px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 11px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini secara permanen?')">🗑️ Hapus Item</a>
                     {% endif %}
                 {% endif %}
             </div> 
@@ -581,7 +614,7 @@
 
         <form action="/klaim_proses" method="POST">
             <input type="hidden" id="modalBarangId" name="barang_id">
-            <input type="hidden" name="role" value="{{ role }}">
+            <!-- Hapus saja -->
 
             <div class="form-group">
                 <label>Nama Lengkap Anda</label>
@@ -624,7 +657,7 @@
 
         <form action="/klaim_proses" method="POST">
             <input type="hidden" id="modalKlaimId" name="barang_id">
-            <input type="hidden" name="role" value="{{ role }}">
+            <!-- Hapus saja -->
 
             <div class="form-group">
                 <label>Nama Lengkap Anda</label>
