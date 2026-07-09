@@ -22,9 +22,10 @@
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #007A33; outline: none; box-shadow: 0 0 0 3px rgba(0, 122, 51, 0.1); }
         .btn-submit { width: 100%; background-color: #007A33; color: white; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
         .btn-submit:hover { background-color: #006428; }
-        .btn-foto{ width:100%; padding:12px;margin-bottom:8px;border:none;border-radius:8px;cursor:pointer;background:#007A33;color:white;font-weight:bold;
+        .btn-foto{ width:100%; padding:12px; margin-bottom:8px; border:none; border-radius:8px; cursor:pointer; background:#007A33; color:white; font-weight:bold; }
+
         #previewContainer{
-    animation: muncul .3s ease;
+            animation:muncul .3s ease;
 }
 
 @keyframes muncul{
@@ -111,11 +112,15 @@
 <div class="form-group">
     <label>📷 Foto Barang (Opsional)</label>
 
-    <button type="button" onclick="document.getElementById('kamera').click()" class="btn-foto">
-        📷 Buka Kamera
+    <button type="button"
+        onclick="document.getElementById('foto_barang').click()"
+        class="btn-foto">
+        📷 Ambil Foto
     </button>
 
-    <button type="button" onclick="document.getElementById('galeri').click()" class="btn-foto">
+    <button type="button"
+        onclick="document.getElementById('foto_barang').click()"
+        class="btn-foto">
         🖼️ Pilih dari Galeri
     </button>
 <!-- Preview Foto -->
@@ -175,25 +180,14 @@
    ">
 </p>
     <input
+    type="file"
     id="foto_barang"
     name="foto_barang"
-    type="file"
     accept="image/*"
-    capture="environment"
     style="display:none;">
 </div>
 <button type="submit" class="btn-submit">Kirim Laporan</button>
 </form>
-
-<script>
-    document.getElementById('lostFoundForm').addEventListener('submit', function(e) {
-        var kontak = document.getElementById('kontakInput').value;
-        if (!kontak.startsWith('62')) {
-            alert('Format nomor WhatsApp harus diawali angka 62 (contoh: 628123456789)');
-            e.preventDefault();
-        }
-    });
-</script>
 
 <script>
 document.getElementById('lostFoundForm').addEventListener('submit', function(e) {
@@ -222,23 +216,17 @@ function formatWhatsApp() {
 </script>
 <script>
 
-const kamera = document.getElementById("kamera");
-const galeri = document.getElementById("galeri");
+const foto = document.getElementById("foto_barang");
 
-kamera.addEventListener("change", previewFoto);
-galeri.addEventListener("change", previewFoto);
-
-function previewFoto(event){
+foto.addEventListener("change", function (event) {
 
     const file = event.target.files[0];
 
-    if(!file) return;
+    if (!file) return;
 
-    // tampilkan nama file
     document.getElementById("namaFile").innerHTML =
         "📄 " + file.name;
 
-    // preview gambar
     const reader = new FileReader();
 
     reader.onload = function(e){
@@ -251,12 +239,11 @@ function previewFoto(event){
 
     reader.readAsDataURL(file);
 
-}
+});
 
 function hapusFoto(){
 
-    kamera.value = "";
-    galeri.value = "";
+    foto.value = "";
 
     document.getElementById("previewFoto").src = "";
 
