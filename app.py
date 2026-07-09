@@ -279,8 +279,11 @@ def laporkan():
             pesan_error = "Laporan ditolak! Harap tidak menggunakan kata-kata kasar/sensitif."
             conn.close()
             return render_template('laporkan.html', error=pesan_error, role=role_aktif, kategori_list=kategori_db)
-
+        print("===== REQUEST FILES =====")
+        print(request.files)
         file_foto = request.files.get('foto_barang')
+        print("===== FILE FOTO =====")
+        print(file_foto)
         if file_foto and file_foto.filename != '':
             filename = secure_filename(file_foto.filename)
             jalur_simpan = os.path.join(app.config['UPLOAD_FOLDER'], filename)
