@@ -325,10 +325,10 @@ def klaim_proses():
 
     barang_id = request.form.get("barang_id")
 
-    nama = request.form.get("nama_pengklaim")
-    nim = request.form.get("nim_pengklaim")
-    wa = request.form.get("wa_pengklaim")
-    pesan = request.form.get("pesan_pengklaim")
+    nama = request.form.get("nama_pengklaim") or request.form.get("nama_penemu")
+    nim = request.form.get("nim_pengklaim") or request.form.get("nim_penemu")
+    wa = request.form.get("wa_pengklaim") or request.form.get("wa_penemu")
+    pesan = request.form.get("pesan_pengklaim") or request.form.get("pesan_penemu")
 
     print(barang_id, nama, nim, wa, pesan)
 

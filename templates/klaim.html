@@ -33,6 +33,7 @@
     </div>
 
     <form action="{{ url_for('klaim_proses') }}" method="POST">
+        <input type="hidden" name="barang_id" value="{{ item.id }}">
         <div class="form-group">
             <label for="nama_klaim">Nama Lengkap Anda</label>
             <input type="text" id="nama_klaim" name="nama_klaim" placeholder="Masukkan nama lengkap" required>
