@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Lost & Found - Universitas Lamappapoleonro</title>
-   <style>
+    <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
     body { background-color: #f7f9fa; color: #333; overflow-x: hidden; }
     
@@ -64,10 +64,10 @@
 
     .stats-container-header { 
         display: grid; 
-        grid-template-columns: repeat(3, 1fr); 
+        grid-template-columns: repeat(4, 1fr); 
         gap: 15px;
         width: 100%;
-        max-width: 750px;
+        max-width: 850px;
         margin: 12px 0 0 0;
     }
 
@@ -100,6 +100,7 @@
     .role-badge-container {
         display: flex;
         justify-content: flex-end;
+        align-items: center;
         margin-bottom: 15px;
     }
     .role-badge {
@@ -121,39 +122,43 @@
     .tips-icon { background: #2e7d32; color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
     .tips-text { font-size: 13px; color: #1e4620; line-height: 1.4; }
 
-    /* ==================== RENOVASI SUSUNAN NAVIGASI & PILLS ==================== */
+    /* ==================== PERBAIKAN SUSUNAN NAVIGASI & PILLS ==================== */
     .nav-wrapper {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 15px;
+        gap: 10px;
         margin-bottom: 20px;
-        flex-wrap: wrap;
+        width: 100%;
     }
 
     .pills-container { 
         display: flex; 
-        gap: 8px; 
-        flex-wrap: wrap; 
+        gap: 6px; 
         align-items: center; 
+        flex-wrap: nowrap; 
+        overflow-x: auto;
+        padding-bottom: 4px;
     }
     
     .admin-actions-container {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+        flex-shrink: 0;
     }
 
     .pill-btn { 
-        padding: 10px 20px; 
+        padding: 8px 14px; 
         border-radius: 20px; 
         background: #eef1f4; 
         color: #555; 
         text-decoration: none; 
-        font-weight: bold; 
-        font-size: 13.5px; 
+        font-weight: 600; 
+        font-size: 13px; 
         border: none; 
         cursor: pointer;
+        white-space: nowrap;
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
     .pill-btn:hover {
@@ -182,40 +187,42 @@
     .btn-verifikasi-nav {
         background-color: #3b82f6; 
         color: white; 
-        padding: 10px 24px; 
+        padding: 8px 14px; 
         border-radius: 50px; 
         text-decoration: none; 
-        font-weight: bold; 
-        font-size: 14px; 
+        font-weight: 600; 
+        font-size: 13px; 
         display: inline-flex; 
         align-items: center;
-        gap: 6px;
+        gap: 5px;
+        white-space: nowrap;
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        box-shadow: 0 4px 6px rgba(59, 130, 246, 0.2);
+        box-shadow: 0 3px 6px rgba(59, 130, 246, 0.2);
     }
     .btn-verifikasi-nav:hover {
         background-color: #2563eb;
-        transform: translateY(-3px);
-        box-shadow: 0 8px 15px rgba(59, 130, 246, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(59, 130, 246, 0.3);
     }
 
     .btn-gear-admin {
         background-color: #4b5563; 
         color: white; 
-        width: 38px; 
-        height: 38px; 
+        width: 34px; 
+        height: 34px; 
         border-radius: 50%; 
         text-decoration: none; 
         display: inline-flex; 
         align-items: center; 
         justify-content: center; 
+        flex-shrink: 0;
         transition: background-color 0.3s ease; 
     }
     .btn-gear-admin:hover { background-color: #374151 !important; }
-    .btn-gear-admin .gear-icon { display: inline-block; transition: transform 0.6s ease; font-size: 18px; line-height: 1; }
+    .btn-gear-admin .gear-icon { display: inline-block; transition: transform 0.6s ease; font-size: 16px; line-height: 1; }
     .btn-gear-admin:hover .gear-icon { transform: rotate(180deg); }
 
-    /* ==================== RENOVASI TOOLBAR & TOMBOL LAPORAN ==================== */
+    /* ==================== TOOLBAR & TOMBOL LAPORAN ==================== */
     .toolbar-renovated { 
         background: white; 
         padding: 18px; 
@@ -404,9 +411,10 @@
     </div>
 
     <div class="stats-container-header">
-        <div class="stat-card-header"><h2>{{ hilang }}</h2><p>Hilang</p></div>
-        <div class="stat-card-header"><h2>{{ ditemukan }}</h2><p>Ditemukan</p></div>
-        <div class="stat-card-header"><h2>{{ selesai }}</h2><p>Selesai</p></div>
+        <div class="stat-card-header"><h2>{{ hilang }}</h2><p>Lost</p></div>
+        <div class="stat-card-header"><h2>{{ ditemukan }}</h2><p>Found</p></div>
+        <div class="stat-card-header"><h2>{{ verifikasi_count }}</h2><p>Verification</p></div>
+        <div class="stat-card-header"><h2>{{ selesai }}</h2><p>Done</p></div>
     </div>
 </header>
 
@@ -418,7 +426,7 @@
             {% for category, message in messages %}
                 {% if category == 'sukses_pending' %}
                     <div id="customPopup" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
-                        <div style="background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-width: 450px; width: 90%; text-align: center; border-top: 5px solid #10b981; transform: scale(0.9); animation: popIn 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                        <div style="background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-width: 450px; width: 90%; text-align: center; border-top: 5px solid #10b981; transform: scale(0.9); animation: modalPop 0.3s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);">
                             <div style="font-size: 45px; margin-bottom: 15px;">🎉</div>
                             <h3 style="margin-bottom: 10px; color: #111827; font-size: 18px; font-weight: 700;">Berhasil Terkirim!</h3>
                             <p style="color: #4b5563; font-size: 14px; line-height: 1.5; margin-bottom: 20px;">{{ message }}</p>
@@ -435,25 +443,12 @@
     {% endwith %}
     
     <div class="role-badge-container">
-        {% if session.get('admin') %}
+        {% if session.get('admin') or role == 'admin' %}
             <span class="role-badge admin-mode">Mode Akses: 🔐 Administrator</span>
+            <a href="{{ url_for('logout') }}" style="background:#dc2626; color:white; padding:6px 14px; border-radius:20px; text-decoration:none; font-weight:bold; font-size:12px; margin-left:10px;">🚪 Logout Admin</a>
         {% else %}
             <span class="role-badge">Mode Akses: 👥 Guest</span>
         {% endif %}
-     {% if session.get('admin') %}
-<a href="{{ url_for('logout') }}"
-style="
-background:#dc2626;
-color:white;
-padding:8px 16px;
-border-radius:8px;
-text-decoration:none;
-font-weight:bold;
-margin-left:10px;
-">
-🚪 Logout Admin
-</a>
-{% endif %}
     </div>
 
     <div class="tips-banner">
@@ -464,42 +459,24 @@ margin-left:10px;
     </div>
 
     <div class="nav-wrapper">
-       <div class="pills-container">
-    <a href="{{ url_for('index', status='all') }}"
-       class="pill-btn {% if tab_aktif == 'all' %}active{% endif %}">
-       Halaman Utama
-    </a>
+        <div class="pills-container">
+            <a href="{{ url_for('index', status='all', role=role) }}" class="pill-btn {% if tab_aktif == 'all' %}active{% endif %}">Halaman Utama</a>
+            <a href="{{ url_for('index', status='Lost', role=role) }}" class="pill-btn {% if tab_aktif == 'Lost' %}active{% endif %}">Laporan Kehilangan</a>
+            <a href="{{ url_for('index', status='Found', role=role) }}" class="pill-btn {% if tab_aktif == 'Found' %}active{% endif %}">Laporan Penemuan</a>
+            <a href="{{ url_for('index', status='Dalam_Proses_Klaim', role=role) }}" class="pill-btn {% if tab_aktif == 'Dalam_Proses_Klaim' %}active{% endif %}">Dalam Verifikasi</a>
+            <a href="{{ url_for('index', status='Done', role=role) }}" class="pill-btn {% if tab_aktif == 'Done' %}active{% endif %}">Riwayat Selesai</a>
 
-    <a href="{{ url_for('index', status='Lost') }}"
-       class="pill-btn {% if tab_aktif == 'Lost' %}active{% endif %}">
-       Laporan Kehilangan
-    </a>
+            {% if session.get('admin') or role == 'admin' %}
+                <a href="{{ url_for('index', status='Pending', role=role) }}" class="pill-btn btn-pending-admin {% if tab_aktif == 'Pending' %}active{% endif %}">
+                    Antrean Persetujuan <span style="background:#dc3545;color:white;border-radius:50%;padding:1px 5px;font-size:10px;margin-left:3px;">{{ pending_count }}</span>
+                </a>
+            {% endif %}
+        </div>
 
-    <a href="{{ url_for('index', status='Found') }}"
-       class="pill-btn {% if tab_aktif == 'Found' %}active{% endif %}">
-       Laporan Penemuan
-    </a>
-
-    <a href="{{ url_for('index', status='Done') }}"
-       class="pill-btn {% if tab_aktif == 'Done' %}active{% endif %}">
-       Riwayat Selesai
-    </a>
-
-    {% if session.get('admin') %}
-    <a href="{{ url_for('index', status='Pending') }}"
-       class="pill-btn btn-pending-admin {% if tab_aktif == 'Pending' %}active{% endif %}">
-        Antrean Persetujuan
-        <span style="background:#dc3545;color:white;border-radius:50%;padding:2px 6px;font-size:11px;margin-left:5px;">
-            {{ pending_count }}
-        </span>
-    </a>
-    {% endif %}
-</div>
-
-        {% if session.get('admin') %}
+        {% if session.get('admin') or role == 'admin' %}
             <div class="admin-actions-container">
-                <a href="/admin/klaim" class="btn-verifikasi-nav">📋 Verifikasi Klaim</a>
-                <a href="{{ url_for('kelola_kategori') }}" class="btn-gear-admin" title="Kelola Kategori">
+                <a href="/admin/klaim?role={{ role }}" class="btn-verifikasi-nav">📋 Verifikasi Klaim</a>
+                <a href="{{ url_for('kelola_kategori', role=role) }}" class="btn-gear-admin" title="Kelola Kategori">
                     <span class="gear-icon">⚙️</span>
                 </a>
             </div>
@@ -509,38 +486,40 @@ margin-left:10px;
     <div class="toolbar-renovated">
         <form action="/index" method="GET" class="search-form">
             <input type="hidden" name="status" value="{{ tab_aktif }}">
-            <!-- Hapus saja --> 
+            <input type="hidden" name="role" value="{{ role }}">
             <input type="text" name="search" placeholder="🔍 Cari nama barang..." value="{{ cari }}">
             <select name="kategori" onchange="this.form.submit()">
-                 <option value="">-- Semua Kategori --</option>
-                    {% for kat in kategori_list %}
-                 <option value="{{ kat['nama_kategori'] }}" {% if kategori_aktif == kat['nama_kategori'] %}selected{% endif %}>{{ kat['nama_kategori'] }}</option>
-                    {% endfor %}
+                <option value="">-- Semua Kategori --</option>
+                {% for kat in kategori_list %}
+                    <option value="{{ kat['nama_kategori'] }}" {% if kategori_aktif == kat['nama_kategori'] %}selected{% endif %}>{{ kat['nama_kategori'] }}</option>
+                {% endfor %}
             </select>
             <button type="submit" class="btn-search">Cari</button>
             {% if cari or kategori_aktif %}
-                <a href="{{ url_for('index') }}" class="btn-reset">Reset</a>
+                <a href="{{ url_for('index', role=role) }}" class="btn-reset">Reset</a>
             {% endif %}
         </form>
 
-        <a href="{{ url_for('laporkan') }}" class="btn-report-action">
+        <a href="{{ url_for('laporkan', role=role) }}" class="btn-report-action">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg> 
             Laporkan Item
         </a>
     </div>
 
-   <div class="grid">
+    <div class="grid">
         {% for item in barang %}
-        <div class="card {% if 'Pending_' in item.tipe %}pending-border{% elif item.tipe == 'Lost' %}lost-border{% elif item.tipe == 'Done' %}done-border{% endif %}">
+        <div class="card {% if 'Pending_' in item.tipe or item.tipe == 'Dalam_Proses_Klaim' %}pending-border{% elif item.tipe == 'Lost' %}lost-border{% elif item.tipe == 'Done' %}done-border{% endif %}">
             
             {% if 'Pending_' in item.tipe %}
                 <span class="badge pending">⏳ Pending ({{ item.tipe.split('_')[1] }})</span>
+            {% elif item.tipe == 'Dalam_Proses_Klaim' %}
+                <span class="badge pending" style="background-color: #e0f2fe; color: #0369a1;">⏳ Under verification</span>
             {% elif item.tipe == 'Lost' %}
-                <span class="badge lost">🔴 Hilang</span>
+                <span class="badge lost">🔴 Lost</span>
             {% elif item.tipe == 'Found' %}
-                <span class="badge found">🟢 Ditemukan</span>
+                <span class="badge found">🟢 Found</span>
             {% else %}
-                <span class="badge done">⚪ Selesai</span>
+                <span class="badge done">⚪ Done</span>
             {% endif %}
             
             <h3>{{ item.nama }}</h3>
@@ -562,10 +541,10 @@ margin-left:10px;
             
             <div class="actions-group" style="width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
                 {% if 'Pending_' in item.tipe %}
-                    {% if session.get('admin') %}
+                    {% if session.get('admin') or role == 'admin' %}
                         <div style="display: flex; gap: 8px; width: 100%;">
-                            <a href="/setujui/{{ item.id }}" class="btn-approve-action" style="flex: 1; text-align: center;" onclick="return confirm('Setujui laporan ini untuk dipublikasikan?')">✓ Setujui</a>
-                            <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}" class="btn-delete" style="padding: 10px 15px;" title="Tolak Laporan" onclick="return confirm('Apakah Anda yakin ingin menolak & menghapus laporan ini?')">❌ Tolak</a>
+                            <a href="/setujui/{{ item.id }}?role={{ role }}" class="btn-approve-action" style="flex: 1; text-align: center;" onclick="return confirm('Setujui laporan ini untuk dipublikasikan?')">✓ Setujui</a>
+                            <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-delete" style="padding: 10px 15px;" title="Tolak Laporan" onclick="return confirm('Apakah Anda yakin ingin menolak & menghapus laporan ini?')">❌ Tolak</a>
                         </div>
                     {% endif %}
                 {% else %}
@@ -590,8 +569,8 @@ margin-left:10px;
                         <p style="color: #2e7d32; font-weight: bold; font-size: 13px; text-align: center; width: 100%; margin-bottom: 5px;">✓ Kasus Ditutup</p>
                     {% endif %}
 
-                    {% if session.get('admin') %}
-                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}" class="btn-click-effect" style="margin-top: 2px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 11px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini secara permanen?')">🗑️ Hapus Item</a>
+                    {% if session.get('admin') or role == 'admin' %}
+                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-click-effect" style="margin-top: 2px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 11px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini secara permanen?')">🗑️ Hapus Item</a>
                     {% endif %}
                 {% endif %}
             </div> 
@@ -602,6 +581,7 @@ margin-left:10px;
     </div>
 </div>
 
+<!-- MODAL POPUP PENEMUAN BARANG -->
 <div id="foundModal" class="modal-overlay" onclick="closeModalOutside(event, 'foundModal')">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h2 class="modal-header-title">🙋‍♂️ Konfirmasi Penemuan Barang</h2>
@@ -612,31 +592,26 @@ margin-left:10px;
             <strong>Lokasi di Laporan:</strong> <span id="modalBarangLokasi"></span>
         </div>
 
-        <form action="/klaim_proses" method="POST">
-            <input type="hidden" id="modalBarangId" name="barang_id">
-            <!-- Hapus saja -->
+        <form id="formFound" action="" method="POST">
+            <!-- 🟢 PENANDA KHUSUS PENEMU -->
+            <input type="hidden" name="jenis_klaim" value="Penemu">
 
             <div class="form-group">
-                <label>Nama Lengkap Anda</label>
-                <input type="text" name="nama_penemu" placeholder="Masukkan nama lengkap" required>
-            </div>
-
-            <div class="form-group">
-                <label>NIM (Nomor Induk Mahasiswa)</label>
-                <input type="text" name="nim_penemu" placeholder="Masukkan NIM Anda" required>
+                <label>Nama Anda</label>
+                <input type="text" name="nama_klaim" placeholder="Masukkan nama lengkap" required>
             </div>
 
             <div class="form-group">
                 <label>Nomor WhatsApp Anda</label>
-                <input type="text" name="wa_penemu" placeholder="Contoh: 0812345678" required>
+                <input type="text" name="wa_klaim" placeholder="Contoh: 0812345678" required>
             </div>
 
             <div class="form-group">
                 <label>Pesan / Lokasi Barang Sekarang (Di mana barang Anda amankan?)</label>
-                <textarea name="pesan_penemu" rows="4" placeholder="Tulis info sedetail mungkin agar admin bisa memverifikasi..." required></textarea>
+                <textarea name="bukti_detail" rows="4" placeholder="Tulis info sedetail mungkin agar admin bisa memverifikasi..." required></textarea>
             </div>
 
-           <button type="submit"class="btn-submit-modal btn-green">Kirim Permintaan Klaim</button>
+            <button type="submit" class="btn-submit-modal btn-blue">Kirim Info Penemuan</button>
         </form>
         
         <button type="button" class="btn-close-modal" onclick="document.getElementById('foundModal').style.display='none'">
@@ -645,6 +620,7 @@ margin-left:10px;
     </div>
 </div>
 
+<!-- MODAL POPUP KLAIM BARANG -->
 <div id="klaimModal" class="modal-overlay" onclick="closeModalOutside(event, 'klaimModal')">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h2 class="modal-header-title">📦 Form Klaim Barang</h2>
@@ -655,28 +631,23 @@ margin-left:10px;
             <strong>Lokasi di Laporan:</strong> <span id="modalKlaimLokasi"></span>
         </div>
 
-        <form action="/klaim_proses" method="POST">
-            <input type="hidden" id="modalKlaimId" name="barang_id">
-            <!-- Hapus saja -->
+        <form id="formKlaim" action="" method="POST">
+            <!-- 🟢 PENANDA KHUSUS PENGKLAIM -->
+            <input type="hidden" name="jenis_klaim" value="Pengklaim">
 
             <div class="form-group">
-                <label>Nama Lengkap Anda</label>
-                <input type="text" name="nama_pengklaim" placeholder="Masukkan nama lengkap" required>
-            </div>
-
-            <div class="form-group">
-                <label>NIM (Nomor Induk Mahasiswa)</label>
-                <input type="text" name="nim_pengklaim" placeholder="Masukkan NIM Anda" required>
+                <label>Nama Anda</label>
+                <input type="text" name="nama_klaim" placeholder="Masukkan nama lengkap" required>
             </div>
 
             <div class="form-group">
                 <label>Nomor WhatsApp Anda</label>
-                <input type="text" name="wa_pengklaim" placeholder="Contoh: 0812345678" required>
+                <input type="text" name="wa_klaim" placeholder="Contoh: 0812345678" required>
             </div>
 
             <div class="form-group">
                 <label>Deskripsi Bukti Kepemilikan (Ciri khusus barang)</label>
-                <textarea name="pesan_pengklaim" rows="4" placeholder="Tulis info sedetail mungkin (misal: isi dompet, retakan, gantungan kunci) agar admin bisa memverifikasi..." required></textarea>
+                <textarea name="bukti_detail" rows="4" placeholder="Tulis info sedetail mungkin (misal: isi dompet, retakan, gantungan kunci) agar admin bisa memverifikasi..." required></textarea>
             </div>
 
             <button type="submit" class="btn-submit-modal btn-green">Kirim Permintaan Klaim</button>
@@ -691,7 +662,7 @@ margin-left:10px;
 <script>
     // Fungsi buka modal penemuan (Mencari Pemilik)
     function openFoundModal(id, nama, kategori, lokasi) {
-        document.getElementById('modalBarangId').value = id;
+        document.getElementById('formFound').action = '/klaim/' + id;
         document.getElementById('modalBarangNama').innerText = nama;
         document.getElementById('modalBarangKategori').innerText = kategori;
         document.getElementById('modalBarangLokasi').innerText = lokasi;
@@ -700,7 +671,7 @@ margin-left:10px;
 
     // Fungsi buka modal klaim barang
     function openKlaimModal(id, nama, kategori, lokasi) {
-        document.getElementById('modalKlaimId').value = id;
+        document.getElementById('formKlaim').action = '/klaim/' + id;
         document.getElementById('modalKlaimNama').innerText = nama;
         document.getElementById('modalKlaimKategori').innerText = kategori;
         document.getElementById('modalKlaimLokasi').innerText = lokasi;
@@ -714,6 +685,7 @@ margin-left:10px;
         }
     }
 
+    // Animasi Parallax Header saat Scroll
     window.addEventListener('scroll', function() {
         const header = document.getElementById('mainHeader');
         let scrollValue = window.scrollY;
