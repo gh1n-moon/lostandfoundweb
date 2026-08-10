@@ -116,28 +116,27 @@
 <div class="form-group">
     <label>📷 Foto Barang (Opsional)</label>
 
-    <button type="button"
-        onclick="document.getElementById('foto_barang').click()"
-        class="btn-foto">
+    <!-- Tombol Ambil Foto Langsung dari Kamera -->
+    <button type="button" onclick="document.getElementById('foto_kamera').click()" class="btn-foto">
         📷 Ambil Foto
     </button>
 
-    <button type="button"
-        onclick="document.getElementById('foto_barang').click()"
-        class="btn-foto">
+    <!-- Tombol Pilih dari Galeri -->
+    <button type="button" onclick="document.getElementById('foto_galeri').click()" class="btn-foto" style="margin-top: 8px;">
         🖼️ Pilih dari Galeri
     </button>
-<!-- Preview Foto -->
-<!-- Preview -->
-<div id="previewContainer" style="display:none;margin-top:18px;">
 
-    <p style="font-weight:bold;margin-bottom:10px;">
-        Preview Foto
-    </p>
+    <!-- INPUT KHUSUS KAMERA (Paksa buka kamera belakang di HP) -->
+    <input type="file" id="foto_kamera" name="foto_barang" accept="image/*" capture="environment" style="display:none;" onchange="previewFile(this)">
 
-    <img id="previewFoto"
-         src=""
-         style="
+    <!-- INPUT KHUSUS GALERI -->
+    <input type="file" id="foto_galeri" name="foto_barang" accept="image/*" style="display:none;" onchange="previewFile(this)">
+
+    <!-- Preview Foto -->
+    <div id="previewContainer" style="display:none; margin-top:18px;">
+        <p style="font-weight:bold; margin-bottom:10px;">Preview Foto</p>
+
+        <img id="previewFoto" src="" style="
             width:100%;
             max-height:320px;
             object-fit:contain;
@@ -145,21 +144,16 @@
             border-radius:12px;
             background:#f7f7f7;
             padding:8px;
-         ">
+        ">
 
-    <p id="namaFile"
-       style="
+        <p id="namaFile" style="
             margin-top:10px;
             color:#555;
             text-align:center;
             font-size:14px;
-       ">
-    </p>
+        "></p>
 
-    <button
-        type="button"
-        onclick="hapusFoto()"
-        style="
+        <button type="button" onclick="hapusFoto()" style="
             width:100%;
             margin-top:12px;
             padding:10px;
@@ -170,30 +164,51 @@
             cursor:pointer;
             font-weight:bold;
         ">
-        ❌ Hapus Foto
-    </button>
-
+            ❌ Hapus Foto
+        </button>
+    </div>
 </div>
 
-<p id="namaFile"
-   style="
-      margin-top:10px;
-      font-size:14px;
-      color:#555;
-      text-align:center;
-   ">
-</p>
-    <input
-    type="file"
-    id="foto_barang"
-    name="foto_barang"
-    accept="image/*"
-    style="display:none;">
-</div>
 <button type="submit" class="btn-submit">Kirim Laporan</button>
 </form>
 
 <script>
+    const inputKamera = document.getElementById('foto_kamera');
+    const inputGaleri = document.getElementById('foto_galeri');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewFoto = document.getElementById('previewFoto');
+    const namaFile = document.getElementById('namaFile');
+
+    function previewFile(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+
+            // Reset input yang lain agar tidak bentrok saat dikirim
+            if (input.id === 'foto_kamera') {
+                inputGaleri.value = "";
+            } else {
+                inputKamera.value = "";
+            }
+
+            // Tampilkan Gambar di Preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewFoto.src = e.target.result;
+                namaFile.innerText = "📁 " + file.name;
+                previewContainer.style.display = "block";
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function hapusFoto() {
+        inputKamera.value = "";
+        inputGaleri.value = "";
+        previewFoto.src = "";
+        namaFile.innerText = "";
+        previewContainer.style.display = "none";
+    }
+</script>
 document.getElementById('lostFoundForm').addEventListener('submit', function(e) {
 
     let kontak = document.getElementById('no_wa').value.trim();
