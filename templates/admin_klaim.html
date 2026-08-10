@@ -5,137 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Verifikasi Klaim - Admin</title>
     <style>
-/* ==============================================================================
-   ANIMASI ELEMENT & TABEL VERIFIKASI
-   ============================================================================== */
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; padding: 15px; margin: 0; }
+    .container { max-width: 1150px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    
+    h2 { color: #1e293b; margin-top: 10px; font-size: 20px; }
+    p.sub-title { color: #64748b; font-size: 13.5px; margin-bottom: 20px; }
+    .btn-back { display: inline-block; color: #3b82f6; text-decoration: none; font-weight: bold; font-size: 14px; }
 
-.table-animasi tbody tr {
-    animation: fadeInUp 0.5s ease-out both;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.btn-aksi {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border-radius: 6px;
-    padding: 8px 16px;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    text-decoration: none;
-    font-size: 14px;
-}
-
-.btn-setujui {
-    background-color: #10b981;
-    color: white;
-}
-
-.btn-setujui:hover {
-    background-color: #059669;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 12px rgba(16, 185, 129, 0.4);
-}
-
-.btn-setujui:active {
-    transform: translateY(1px);
-}
-
-.btn-setujui:hover .icon-check {
-    animation: bounceDelay 0.4s ease-in-out infinite alternate;
-}
-
-.btn-tolak {
-    background-color: #e63946;
-    color: white;
-}
-
-.btn-tolak:hover {
-    background-color: #d62828;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 12px rgba(230, 57, 70, 0.4);
-    animation: gentleShake 0.5s ease-in-out infinite;
-}
-
-.btn-tolak:active {
-    transform: translateY(1px);
-}
-
-@keyframes bounceDelay {
-    from { transform: scale(1); }
-    to { transform: scale(1.2); }
-}
-
-@keyframes gentleShake {
-    0%, 100% { transform: translateY(-2px) rotate(0deg); }
-    25% { transform: translateY(-2px) rotate(-1deg); }
-    75% { transform: translateY(-2px) rotate(1deg); }
-}
-
-.btn-clicked {
-    pointer-events: none;
-    opacity: 0.6;
-    transform: scale(0.96) !important;
-    box-shadow: none !important;
-}
-
-/* Badge Tipe Peran (Pengklaim / Penemu) */
-.badge-role {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: bold;
-    margin-top: 4px;
-}
-.badge-pengklaim {
-    background-color: #dcfce7;
-    color: #15803d;
-    border: 1px solid #bbf7d0;
-}
-.badge-penemu {
-    background-color: #e0f2fe;
-    color: #0369a1;
-    border: 1px solid #bae6fd;
-}
-    </style>
-    <style>
-    body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; padding: 20px; }
-    .container { max-width: 1150px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-    h2 { color: #1e293b; margin-top: 0; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+    /* ==============================================================================
+       STYLING TABEL DEKSTOP (LAPTOP / PC)
+       ============================================================================== */
+    .table-container { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    th { background-color: #f8fafc; color: #64748b; }
-    
-    td:last-child {
-        white-space: nowrap; 
-        text-align: center;  
-    }
+    th { background-color: #f8fafc; color: #64748b; white-space: nowrap; }
 
-    .action-container {
-        display: inline-flex;
-        gap: 8px;
-        align-items: center;
-        justify-content: center;
-        vertical-align: middle;
+    /* Badge Peran (Pengklaim / Penemu) */
+    .badge-role { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-top: 4px; }
+    .badge-pengklaim { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-penemu { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+    /* Tombol Aksi */
+    .action-container { display: inline-flex; gap: 8px; align-items: center; }
+    .btn-aksi {
+        transition: all 0.2s ease;
+        font-weight: 600; display: inline-flex; align-items: center; gap: 5px;
+        border-radius: 6px; padding: 8px 14px; border: none; cursor: pointer;
+        text-decoration: none; font-size: 13px; text-align: center; justify-content: center;
     }
-    
-    .btn-back { display: inline-block; margin-bottom: 15px; color: #3b82f6; text-decoration: none; font-weight: bold; }
+    .btn-setujui { background-color: #10b981; color: white; }
+    .btn-setujui:hover { background-color: #059669; }
+    .btn-tolak { background-color: #e63946; color: white; }
+    .btn-tolak:hover { background-color: #d62828; }
+    .btn-clicked { pointer-events: none; opacity: 0.6; }
+
+    /* ==============================================================================
+       RESPONSIF KHUSUS HP (CARD VIEW)
+       ============================================================================== */
+    @media (max-width: 768px) {
+        body { padding: 10px; }
+        .container { padding: 15px; }
+        
+        /* Sembunyikan Header Tabel di Layar HP */
+        table, thead, tbody, th, td, tr { display: block; }
+        thead tr { position: absolute; top: -9999px; left: -9999px; }
+
+        /* Setiap Baris Tabel Diubah Menjadi KARTU */
+        tr {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        /* Tampilan Kolom di dalam Kartu */
+        td {
+            border: none;
+            border-bottom: 1px dashed #f1f5f9;
+            position: relative;
+            padding: 8px 0 8px 45%;
+            font-size: 13.5px;
+            text-align: right !important;
+            min-height: 38px;
+        }
+
+        td:last-child { border-bottom: none; padding-left: 0; margin-top: 10px; }
+
+        /* Menampilkan Label Otomatis di Sebelah Kiri */
+        td::before {
+            position: absolute;
+            top: 8px;
+            left: 0;
+            width: 40%;
+            padding-right: 10px;
+            white-space: nowrap;
+            text-align: left;
+            font-weight: bold;
+            color: #64748b;
+        }
+
+        td:nth-of-type(1)::before { content: "Barang"; }
+        td:nth-of-type(2)::before { content: "Pengklaim / Penemu"; }
+        td:nth-of-type(3)::before { content: "Pelapor Awal"; }
+        td:nth-of-type(4)::before { content: "No. WhatsApp"; }
+        td:nth-of-type(5)::before { content: "Kontak Pelapor"; }
+        td:nth-of-type(6)::before { content: "Bukti Khusus"; }
+        td:nth-of-type(7)::before { content: "Tanggal"; }
+
+        .action-container { width: 100%; display: flex; gap: 8px; }
+        .btn-aksi { flex: 1; padding: 10px; font-size: 14px; }
+    }
     </style>
 </head>
 <body>
@@ -143,82 +105,79 @@
 <div class="container">
     <a href="/index?role={{ role }}" class="btn-back">⬅️ Kembali ke Dashboard Utama</a>
     <h2>📋 Antrean Verifikasi Klaim & Penemuan</h2>
-    <p>Periksa identitas pelapor dan pengklaim/penemu di bawah ini sebelum melakukan verifikasi akhir.</p>
+    <p class="sub-title">Periksa identitas pelapor dan pengklaim/penemu di bawah ini sebelum melakukan verifikasi akhir.</p>
 
     {% if daftar_klaim %}
-    <table class="table-animasi">
-        <thead>
-            <tr>
-                <th>Barang</th>
-                <th>Pengklaim / Penemu</th>
-                <th>Pelapor</th>
-                <th>No. WhatsApp</th>
-                <th>Kontak Pelapor</th>
-                <th>Pesan Bukti Khusus</th>
-                <th>Tanggal Masuk</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for klm in daftar_klaim %}
-            <tr>
-                <td><b>{{ klm.nama_barang }}</b></td>
-                
-                <!-- Kolom Pengklaim / Penemu dengan Badge Penjelas -->
-                <!-- Kolom Pengklaim / Penemu dengan Badge Penjelas Akurat -->
-                <td>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Barang</th>
+                    <th>Pengklaim / Penemu</th>
+                    <th>Pelapor</th>
+                    <th>No. WhatsApp</th>
+                    <th>Kontak Pelapor</th>
+                    <th>Pesan Bukti Khusus</th>
+                    <th>Tanggal Masuk</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for klm in daftar_klaim %}
+                <tr>
+                    <td><b>{{ klm.nama_barang }}</b></td>
+                    
+                    <td>
                         <b>{{ klm.nama_klaim }}</b><br>
-                    {% if klm.jenis_klaim == 'Pengklaim' %}
-                        <span class="badge-role badge-pengklaim">📦 Pengklaim</span>
-                    {% else %}
-                         <span class="badge-role badge-penemu">🙋‍♂️ Penemu</span>
-                    {% endif %}
-                </td>
+                        {% if klm.jenis_klaim == 'Pengklaim' %}
+                            <span class="badge-role badge-pengklaim">📦 Pengklaim</span>
+                        {% else %}
+                            <span class="badge-role badge-penemu">🙋‍♂️ Penemu</span>
+                        {% endif %}
+                    </td>
 
-                <!-- Kolom Nama Pelapor Awal -->
-                <td>
-                    {% if klm.nama_pelapor and klm.nama_pelapor != '-' %}
-                        <b>{{ klm.nama_pelapor }}</b>
-                    {% else %}
-                        <span style="color: #94a3b8; font-style: italic;">Anonim</span>
-                    {% endif %}
-                </td>
+                    <td>
+                        {% if klm.nama_pelapor and klm.nama_pelapor != '-' %}
+                            <b>{{ klm.nama_pelapor }}</b>
+                        {% else %}
+                            <span style="color: #94a3b8; font-style: italic;">Anonim</span>
+                        {% endif %}
+                    </td>
 
-                <!-- WhatsApp Pengklaim / Penemu -->
-                <td><a href="https://wa.me/{{ klm.wa_klaim }}" target="_blank" style="color: #10b981; font-weight: bold;">{{ klm.wa_klaim }} ↗</a></td>
-                
-                <!-- Kontak Pelapor -->
-                <td>
-                    {% if klm.kontak_pelapor %}
-                        <a href="https://wa.me/{{ klm.kontak_pelapor }}" target="_blank" style="color: #0284c7; font-weight: bold;">{{ klm.kontak_pelapor }} ↗</a>
-                    {% else %}
-                        <span style="color: #a3a3a3; font-style: italic; font-size: 13px;">Tidak ada nomor</span>
-                    {% endif %}
-                </td>
+                    <td><a href="https://wa.me/{{ klm.wa_klaim }}" target="_blank" style="color: #10b981; font-weight: bold;">{{ klm.wa_klaim }} ↗</a></td>
+                    
+                    <td>
+                        {% if klm.kontak_pelapor %}
+                            <a href="https://wa.me/{{ klm.kontak_pelapor }}" target="_blank" style="color: #0284c7; font-weight: bold;">{{ klm.kontak_pelapor }} ↗</a>
+                        {% else %}
+                            <span style="color: #a3a3a3; font-style: italic;">Tidak ada nomor</span>
+                        {% endif %}
+                    </td>
 
-                <td style="max-width: 230px; font-style: italic;">"{{ klm.bukti_detail }}"</td>
-                <td>{{ klm.tanggal_klaim }}</td>
-                <td>
-                    <div class="action-container">
-                        <a href="/admin/proses_klaim/{{ klm.id }}/setujui?role={{ role }}" 
-                           class="btn-aksi btn-setujui" 
-                           onclick="return konfirmasiAksi(this, 'Setujui klaim ini? Status barang akan berubah jadi Selesai.', 'Memproses...')">
-                            <span class="icon-check">✓</span> Setujui
-                        </a>
-                        
-                        <a href="/admin/proses_klaim/{{ klm.id }}/tolak?role={{ role }}" 
-                           class="btn-aksi btn-tolak" 
-                           onclick="return konfirmasiAksi(this, 'Tolak permintaan ini?', 'Menolak...')">
-                            <span>❌</span> Tolak
-                        </a>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    <td style="font-style: italic;">"{{ klm.bukti_detail }}"</td>
+                    <td>{{ klm.tanggal_klaim }}</td>
+                    <td>
+                        <div class="action-container">
+                            <a href="/admin/proses_klaim/{{ klm.id }}/setujui?role={{ role }}" 
+                               class="btn-aksi btn-setujui" 
+                               onclick="return konfirmasiAksi(this, 'Setujui klaim ini? Status barang akan berubah jadi Selesai.', 'Memproses...')">
+                                ✓ Setujui
+                            </a>
+                            
+                            <a href="/admin/proses_klaim/{{ klm.id }}/tolak?role={{ role }}" 
+                               class="btn-aksi btn-tolak" 
+                               onclick="return konfirmasiAksi(this, 'Tolak permintaan ini?', 'Menolak...')">
+                                ❌ Tolak
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <p style="text-align: center; color: #888; margin-top: 20px;">🎉 Tidak ada antrean klaim baru saat ini.</p>
+        <p style="text-align: center; color: #888; margin-top: 30px;">🎉 Tidak ada antrean klaim baru saat ini.</p>
     {% endif %}
 </div>
 
@@ -226,11 +185,7 @@
 function konfirmasiAksi(elemen, pesanKonfirmasi, teksProses) {
     if (confirm(pesanKonfirmasi)) {
         elemen.classList.add('btn-clicked');
-        if (elemen.classList.contains('btn-setujui')) {
-            elemen.innerHTML = `<span class="icon-check">⏳</span> ${teksProses}`;
-        } else {
-            elemen.innerHTML = `<span>⏳</span> ${teksProses}`;
-        }
+        elemen.innerHTML = `⏳ ${teksProses}`;
         return true;
     }
     return false;
