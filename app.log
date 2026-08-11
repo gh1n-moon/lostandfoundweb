@@ -1,0 +1,39 @@
+2026-08-12 05:11:21 [WARNING]  * Debugger is active!
+2026-08-12 05:11:21 [INFO]  * Debugger PIN: 122-180-756
+2026-08-12 05:11:25 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:25] "GET /index?role=admin HTTP/1.1" 200 -
+2026-08-12 05:11:27 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:27] "GET /index?role=admin HTTP/1.1" 200 -
+2026-08-12 05:11:27 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:27] "[33mGET /static/uploads/6199466264_109160547725095_1778261199473.png HTTP/1.1[0m" 404 -
+2026-08-12 05:11:28 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:28] "[36mGET /static/uploads/WhatsApp_Image_2022-09-30_at_09.00.29.jpeg HTTP/1.1[0m" 304 -
+2026-08-12 05:11:28 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:28] "[36mGET /static/Logo_UNIPOL.png HTTP/1.1[0m" 304 -
+2026-08-12 05:11:28 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:28] "[36mGET /static/bg_kampus.jpg HTTP/1.1[0m" 304 -
+2026-08-12 05:11:29 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:29] "GET /index?role=admin HTTP/1.1" 200 -
+2026-08-12 05:11:29 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:29] "[36mGET /static/Logo_UNIPOL.png HTTP/1.1[0m" 304 -
+2026-08-12 05:11:29 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:29] "[33mGET /static/uploads/6199466264_109160547725095_1778261199473.png HTTP/1.1[0m" 404 -
+2026-08-12 05:11:29 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:29] "[36mGET /static/uploads/WhatsApp_Image_2022-09-30_at_09.00.29.jpeg HTTP/1.1[0m" 304 -
+2026-08-12 05:11:29 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:29] "[36mGET /static/bg_kampus.jpg HTTP/1.1[0m" 304 -
+2026-08-12 05:11:30 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:30] "GET /index?role=admin HTTP/1.1" 200 -
+2026-08-12 05:11:30 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:30] "[36mGET /static/Logo_UNIPOL.png HTTP/1.1[0m" 304 -
+2026-08-12 05:11:30 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:30] "[33mGET /static/uploads/6199466264_109160547725095_1778261199473.png HTTP/1.1[0m" 404 -
+2026-08-12 05:11:30 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:30] "[36mGET /static/uploads/WhatsApp_Image_2022-09-30_at_09.00.29.jpeg HTTP/1.1[0m" 304 -
+2026-08-12 05:11:30 [INFO] 127.0.0.1 - - [12/Aug/2026 05:11:30] "[36mGET /static/bg_kampus.jpg HTTP/1.1[0m" 304 -
+2026-08-12 05:15:40 [INFO] 127.0.0.1 - - [12/Aug/2026 05:15:40] "GET /index?status=Done&role=admin HTTP/1.1" 200 -
+2026-08-12 05:15:40 [INFO] 127.0.0.1 - - [12/Aug/2026 05:15:40] "[33mGET /static/uploads/bangboo_wkwkwk.png HTTP/1.1[0m" 404 -
+2026-08-12 05:15:40 [INFO] 127.0.0.1 - - [12/Aug/2026 05:15:40] "[36mGET /static/Logo_UNIPOL.png HTTP/1.1[0m" 304 -
+2026-08-12 05:15:40 [INFO] 127.0.0.1 - - [12/Aug/2026 05:15:40] "[36mGET /static/uploads/WhatsApp_Image_2026-06-24_at_21.32.45.jpeg HTTP/1.1[0m" 304 -
+2026-08-12 05:15:40 [INFO] 127.0.0.1 - - [12/Aug/2026 05:15:40] "[36mGET /static/bg_kampus.jpg HTTP/1.1[0m" 304 -
+2026-08-12 05:15:55 [INFO] 127.0.0.1 - - [12/Aug/2026 05:15:55] "GET /admin/klaim?role=admin HTTP/1.1" 200 -
+2026-08-12 05:16:05 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:05] "[32mGET /admin/proses_klaim/26/setujui?role=admin HTTP/1.1[0m" 302 -
+2026-08-12 05:16:05 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:05] "GET /admin/klaim?role=admin HTTP/1.1" 200 -
+2026-08-12 05:16:12 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:12] "[32mGET /admin/proses_klaim/27/setujui?role=admin HTTP/1.1[0m" 302 -
+2026-08-12 05:16:12 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:12] "GET /admin/klaim?role=admin HTTP/1.1" 200 -
+2026-08-12 05:16:15 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:15] "GET /index?role=admin HTTP/1.1" 200 -
+2026-08-12 05:16:15 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:15] "[36mGET /static/Logo_UNIPOL.png HTTP/1.1[0m" 304 -
+2026-08-12 05:16:15 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:15] "[36mGET /static/uploads/WhatsApp_Image_2022-09-30_at_09.00.29.jpeg HTTP/1.1[0m" 304 -
+2026-08-12 05:16:15 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:15] "[36mGET /static/bg_kampus.jpg HTTP/1.1[0m" 304 -
+2026-08-12 05:16:19 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:19] "GET /index?status=Done&role=admin HTTP/1.1" 200 -
+2026-08-12 05:16:19 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:19] "[36mGET /static/Logo_UNIPOL.png HTTP/1.1[0m" 304 -
+2026-08-12 05:16:19 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:19] "[33mGET /static/uploads/6199466264_109160547725095_1778261199473.png HTTP/1.1[0m" 404 -
+2026-08-12 05:16:19 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:19] "[33mGET /static/uploads/bangboo_wkwkwk.png HTTP/1.1[0m" 404 -
+2026-08-12 05:16:19 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:19] "[36mGET /static/uploads/WhatsApp_Image_2026-06-24_at_21.32.45.jpeg HTTP/1.1[0m" 304 -
+2026-08-12 05:16:19 [INFO] 127.0.0.1 - - [12/Aug/2026 05:16:19] "[36mGET /static/bg_kampus.jpg HTTP/1.1[0m" 304 -
+2026-08-12 05:43:28 [INFO]  * Detected change in 'D:\\lostandfoundweb\\telegram_helper.py', reloading
