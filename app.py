@@ -10,29 +10,48 @@ from functools import wraps
 
 import requests
 
-def kirim_notif_telegram(nama_barang, jenis_laporan):
-    TOKEN_BOT = "8692387315:AAEpkVvAH4u4g-4jmn9uazfr9tNfs3A9yGE"
-    CHAT_ID = "7990214224"
+# Konfigurasi Telegram Bot
+BOT_TOKEN = "8692387315:AAEpkVvAH4u4g-4jmn9uazfr9tNfs3A9yGE"
+GROUP_CHAT_ID = "-1004466603212"  # CHAT_ID grup Anda (pake tanda minus)
+
+# ID Topik yang Anda dapatkan di Langkah 3
+TOPIC_ID_LAPORAN = 3  # Sesuaikan dengan ID Topik Laporan
+TOPIC_ID_KLAIM = 4    # Sesuaikan dengan ID Topik Klaim
+
+def kirim_notifikasi_telegram(kategori, barang, detail_tambahan=""):
+    # Tentukan tujuan topik dan template pesan berdasarkan kategori
+    if "Klaim" in kategori:
+        target_topic = TOPIC_ID_KLAIM
+        pesan = (
+            "📩 *PENGAJUAN KLAIM BARU*\n\n"
+            f"• *Detail:* {barang}\n"
+            f"• *Kategori:* {kategori}\n\n"
+            "🔗 *Silakan periksa Antrean Klaim di website.*"
+        )
+    else:
+        target_topic = TOPIC_ID_LAPORAN
+        pesan = (
+            "📦 *LAPORAN BARU MASUK*\n\n"
+            f"• *Nama Barang:* {barang}\n"
+            f"• *Kategori:* {kategori}\n\n"
+            "🔗 *Silakan periksa Antrean Persetujuan di website.*"
+        )
+
+    # Endpoint Telegram API
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     
-    pesan = f"<b>🔔 Notifikasi Lost & Found UNIPOL</b>\n\n" \
-            f"Ada laporan baru masuk:\n" \
-            f"• <b>Barang:</b> {nama_barang}\n" \
-            f"• <b>Kategori:</b> {jenis_laporan}\n\n" \
-            f"Silakan periksa Antrean Persetujuan di website."
-            
-    url = f"https://api.telegram.org/bot{TOKEN_BOT}/sendMessage"
     payload = {
-        "chat_id": CHAT_ID,
+        "chat_id": GROUP_CHAT_ID,
+        "message_thread_id": target_topic,  # Kunci agar masuk ke topik spesifik
         "text": pesan,
-        "parse_mode": "HTML"
+        "parse_mode": "Markdown"
     }
-    
+
     try:
-        response = requests.post(url, data=payload, timeout=5)
-        # Cetak hasil ke terminal VS Code untuk mempermudah pemantauan
-        print("=== TELEGRAM LOG ===", response.json())
+        response = requests.post(url, json=payload)
+        return response.json()
     except Exception as e:
-        print("=== TELEGRAM ERROR ===", e)
+        print(f"Gagal mengirim notifikasi: {e}")
 
 def admin_required(f):
     @wraps(f)
@@ -344,7 +363,7 @@ def laporkan():
         conn.commit()
         conn.close()
         
-        kirim_notif_telegram(nama, tipe)
+        kirim_notifikasi_telegram(nama, tipe)
 
         flash("Laporan Anda berhasil dikirim! Laporan sedang berada dalam antrean peninjauan Admin sebelum diterbitkan ke publik.", "sukses_pending")
         return redirect(url_for('index', role=role_aktif))
@@ -411,7 +430,7 @@ def klaim(barang_id):
     conn.close()
     
     # Panggil notifikasi saat ada klaim baru masuk
-    kirim_notif_telegram(f"Klaim Barang ID #{barang_id}", "Pengajuan Klaim / Penemuan")
+    kirim_notifikasi_telegram(f"Klaim Barang ID #{barang_id}", "Pengajuan Klaim / Penemuan")
 
     flash("Informasi berhasil dikirim! Admin akan segera meninjau laporan Anda.", "sukses_pending")
     return redirect(url_for('index', role=role_aktif))
