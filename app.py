@@ -8,6 +8,29 @@ app = Flask(__name__)
 app.secret_key = "kunci_rahasia_lostfound_unipol"
 from functools import wraps
 
+import requests
+
+def kirim_notif_telegram(nama_barang, jenis_laporan):
+    TOKEN_BOT = "8692387315:AAFe_2N3038HLQfujPDCigReQigpCUAT7Y4"
+    CHAT_ID = "7990214224"
+    
+    pesan = f"🔔 *Notifikasi Lost & Found UNIPOL*\n\n" \
+            f"Ada laporan baru masuk:\n" \
+            f"• *Barang:* {nama_barang}\n" \
+            f"• *Kategori:* {jenis_laporan}\n\n" \
+            f"Silakan periksa Antrean Persetujuan di website."
+            
+    url = f"https://api.telegram.org/bot{TOKEN_BOT}/sendMessage"
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": pesan,
+        "parse_mode": "Markdown"
+    }
+    try:
+        requests.post(url, data=payload)
+    except Exception as e:
+        print("Gagal kirim notif Telegram:", e)
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -318,6 +341,8 @@ def laporkan():
         conn.commit()
         conn.close()
         
+        kirim_notif_telegram(nama, tipe)
+
         flash("Laporan Anda berhasil dikirim! Laporan sedang berada dalam antrean peninjauan Admin sebelum diterbitkan ke publik.", "sukses_pending")
         return redirect(url_for('index', role=role_aktif))
 
@@ -382,6 +407,9 @@ def klaim(barang_id):
     conn.commit()
     conn.close()
     
+    # Panggil notifikasi saat ada klaim baru masuk
+    kirim_notif_telegram(f"Klaim Barang ID #{barang_id}", "Pengajuan Klaim / Penemuan")
+
     flash("Informasi berhasil dikirim! Admin akan segera meninjau laporan Anda.", "sukses_pending")
     return redirect(url_for('index', role=role_aktif))
 # ==============================================================================
@@ -498,6 +526,104 @@ def proses_klaim(klaim_id, tindakan):
         conn.commit()
     conn.close()
     return redirect(url_for('admin_klaim', role=role_aktif))
+# ==============================================================================
+# ROUTE HAPUS MASAL (BULK DELETE) UNTUK ADMIN
+# ==============================================================================
+@app.route('/hapus_masal', methods=['POST'])
+def hapus_masal():
+    role_aktif = request.form.get('role', 'guest')
+    status_tab = request.form.get('status', 'all')
+    
+    # Cek Otorisasi Admin
+    if not session.get('admin') and role_aktif != 'admin':
+        flash("Akses ditolak! Hanya admin yang dapat melakukan aksi ini.", "gagal")
+        return redirect(url_for('index', role=role_aktif, status=status_tab))
+        
+    ids_terpilih = request.form.getlist('item_ids')
+    
+    if ids_terpilih:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Hapus gambar terunggah & data dari database
+        for b_id in ids_terpilih:
+            cursor.execute("SELECT foto FROM barang WHERE id = ?", (b_id,))
+            item = cursor.fetchone()
+            if item and item['foto'] and item['foto'] != 'default.jpg':
+                path_foto = os.path.join(app.config['UPLOAD_FOLDER'], item['foto'])
+                if os.path.exists(path_foto):
+                    try:
+                        os.remove(path_foto)
+                    except Exception:
+                        pass
+            
+            # Hapus referensi klaim & barang
+            cursor.execute("DELETE FROM klaim WHERE barang_id = ?", (b_id,))
+            cursor.execute("DELETE FROM barang WHERE id = ?", (b_id,))
+            
+        conn.commit()
+        conn.close()
+        
+        flash(f"Berhasil menghapus {len(ids_terpilih)} barang sekaligus!", "sukses_pending")
+    else:
+        flash("Tidak ada barang yang dipilih untuk dihapus.", "info")
+        
+    return redirect(url_for('index', role=role_aktif, status=status_tab))
+# ==============================================================================
+# ROUTE SETUJUI / TOLAK MASAL PENDING (ADMIN)
+# ==============================================================================
+@app.route('/aksi_masal_pending', methods=['POST'])
+def aksi_masal_pending():
+    role_aktif = request.form.get('role', 'guest')
+    status_tab = request.form.get('status', 'Pending')
+    
+    if not session.get('admin') and role_aktif != 'admin':
+        flash("Akses ditolak! Hanya admin yang dapat melakukan aksi ini.", "gagal")
+        return redirect(url_for('index', role=role_aktif, status=status_tab))
+        
+    ids_terpilih = request.form.getlist('item_ids')
+    tindakan = request.form.get('tindakan') # 'setujui' atau 'tolak'
+    
+    if ids_terpilih:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        if tindakan == 'setujui':
+            # Ubah status Pending_Lost -> Lost, dan Pending_Found -> Found
+            for b_id in ids_terpilih:
+                cursor.execute("SELECT tipe FROM barang WHERE id = ?", (b_id,))
+                item = cursor.fetchone()
+                if item and 'Pending_' in item['tipe']:
+                    status_baru = item['tipe'].replace('Pending_', '')
+                    cursor.execute("UPDATE barang SET tipe = ? WHERE id = ?", (status_baru, b_id))
+            
+            conn.commit()
+            conn.close()
+            flash(f"Berhasil menyetujui {len(ids_terpilih)} laporan! Laporan telah diterbitkan ke publik.", "sukses_pending")
+            
+        elif tindakan == 'tolak':
+            # Hapus foto & data laporan dari database
+            for b_id in ids_terpilih:
+                cursor.execute("SELECT foto FROM barang WHERE id = ?", (b_id,))
+                item = cursor.fetchone()
+                if item and item['foto'] and item['foto'] != 'default.jpg':
+                    path_foto = os.path.join(app.config['UPLOAD_FOLDER'], item['foto'])
+                    if os.path.exists(path_foto):
+                        try:
+                            os.remove(path_foto)
+                        except Exception:
+                            pass
+                
+                cursor.execute("DELETE FROM barang WHERE id = ?", (b_id,))
+                
+            conn.commit()
+            conn.close()
+            flash(f"Berhasil menolak & menghapus {len(ids_terpilih)} laporan pending.", "info")
+    else:
+        flash("Tidak ada laporan yang dipilih.", "info")
+        
+    return redirect(url_for('index', role=role_aktif, status=status_tab))
+
 @app.route('/logout')
 def logout():
     session.clear()

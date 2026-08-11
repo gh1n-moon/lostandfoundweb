@@ -397,6 +397,16 @@
         background: none; border: none; color: #6b7280; font-size: 14px;
         font-weight: 500; display: block; margin: 15px auto 0 auto; cursor: pointer; text-decoration: underline;
     }
+    /* Toolbar Aksi Masal Melayang (Sticky Header) */
+    .sticky-bulk-toolbar {
+        position: sticky;
+        top: 15px; /* Menempel 15px dari atas layar saat di-scroll */
+        z-index: 999; /* Memastikan selalu berada di atas kartu barang */
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); /* Bayangan halus agar tampil beda dari background */
+        backdrop-filter: blur(8px); /* Efek kaca transparan modern */
+        -webkit-backdrop-filter: blur(8px);
+        transition: all 0.3s ease;
+    }
 </style>
 </head>
 <body>
@@ -506,10 +516,64 @@
         </a>
     </div>
 
+<!-- TOOLBAR AKSI MASAL UNTUK ADMIN -->
+{% if session.get('admin') or role == 'admin' %}
+
+    {% if tab_aktif == 'Pending' %}
+        <!-- TOOLBAR KHUSUS TAB ANTREAN PERSETUJUAN -->
+        <form id="formAksiMasal" action="/aksi_masal_pending" method="POST" onsubmit="return konfirmasiAksiMasal()">
+            <input type="hidden" name="role" value="{{ role }}">
+            <input type="hidden" name="status" value="{{ tab_aktif }}">
+            
+            <!-- 🟢 TAMBAHKAN CLASS 'sticky-bulk-toolbar' DI SINI -->
+            <div class="sticky-bulk-toolbar" style="background: rgba(255, 251, 235, 0.95); border: 1px dashed #fcd34d; padding: 12px 18px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #d97706;">
+                    <label for="selectAll" style="font-weight: bold; color: #b45309; cursor: pointer; font-size: 14px;">Pilih Semua Laporan Pending</label>
+                </div>
+                
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" name="tindakan" value="setujui" id="btnSetujuiMasal" disabled style="background-color: #007A33; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; font-size: 13.5px; cursor: pointer; opacity: 0.5; transition: all 0.2s;">
+                        ✓ Setujui Terpilih (<span class="jumlahTerpilih">0</span>)
+                    </button>
+                    <button type="submit" name="tindakan" value="tolak" id="btnTolakMasal" disabled style="background-color: #dc2626; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; font-size: 13.5px; cursor: pointer; opacity: 0.5; transition: all 0.2s;">
+                        ❌ Tolak Terpilih (<span class="jumlahTerpilih">0</span>)
+                    </button>
+                </div>
+            </div>
+
+    {% else %}
+        <!-- TOOLBAR KHUSUS TAB LAINNYA (HAPUS MASAL) -->
+        <form id="formAksiMasal" action="/hapus_masal" method="POST" onsubmit="return konfirmasiHapusMasal()">
+            <input type="hidden" name="role" value="{{ role }}">
+            <input type="hidden" name="status" value="{{ tab_aktif }}">
+            
+            <!-- 🟢 TAMBAHKAN CLASS 'sticky-bulk-toolbar' DI SINI -->
+            <div class="sticky-bulk-toolbar" style="background: rgba(254, 242, 242, 0.95); border: 1px solid #fca5a5; padding: 12px 18px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)" style="width: 18px; height: 18px; cursor: pointer; accent-color: #dc2626;">
+                    <label for="selectAll" style="font-weight: bold; color: #991b1b; cursor: pointer; font-size: 14px;">Pilih Semua Barang</label>
+                </div>
+                <button type="submit" id="btnHapusMasal" disabled style="background-color: #dc2626; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: bold; font-size: 13.5px; cursor: pointer; opacity: 0.5; transition: all 0.2s;">
+                    🗑️ Hapus Barang Terpilih (<span class="jumlahTerpilih">0</span>)
+                </button>
+            </div>
+    {% endif %}
+
+{% endif %}
+
+    <!-- GRID KARTU BARANG -->
     <div class="grid">
         {% for item in barang %}
         <div class="card {% if 'Pending_' in item.tipe or item.tipe == 'Dalam_Proses_Klaim' %}pending-border{% elif item.tipe == 'Lost' %}lost-border{% elif item.tipe == 'Done' %}done-border{% endif %}">
             
+            <!-- Checkbox Pilihan khusus Admin (Pojok Kiri Atas) -->
+            {% if session.get('admin') or role == 'admin' %}
+                <div style="position: absolute; top: 15px; left: 15px; z-index: 10;">
+                    <input type="checkbox" name="item_ids" value="{{ item.id }}" class="item-checkbox" onchange="updateHitungan()" style="width: 20px; height: 20px; cursor: pointer; accent-color: #dc2626;">
+                </div>
+            {% endif %}
+
             {% if 'Pending_' in item.tipe %}
                 <span class="badge pending">⏳ Pending ({{ item.tipe.split('_')[1] }})</span>
             {% elif item.tipe == 'Dalam_Proses_Klaim' %}
@@ -522,7 +586,8 @@
                 <span class="badge done">⚪ Done</span>
             {% endif %}
             
-            <h3>{{ item.nama }}</h3>
+            <!-- Diberi margin-left jika mode admin agar nama barang tidak bertabrakan dengan checkbox -->
+            <h3 style="{% if session.get('admin') or role == 'admin' %}margin-left: 28px;{% endif %}">{{ item.nama }}</h3>
             <div class="card-meta">🏷️ <strong>Kategori:</strong> {{ item.kategori }}</div>
             <div class="card-meta">📍 <strong>Lokasi:</strong> {{ item.lokasi }}</div>
 
@@ -570,7 +635,7 @@
                     {% endif %}
 
                     {% if session.get('admin') or role == 'admin' %}
-                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-click-effect" style="margin-top: 2px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 11px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini secara permanen?')">🗑️ Hapus Item</a>
+                        <a href="/hapus/{{ item.id }}?status={{ tab_aktif }}&role={{ role }}" class="btn-click-effect" style="margin-top: 2px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; background-color: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; padding: 11px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;" onclick="return confirm('Apakah Anda yakin ingin menghapus laporan ini secara permanen?')">🗑️ Hapus Item Ini</a>
                     {% endif %}
                 {% endif %}
             </div> 
@@ -578,6 +643,11 @@
         {% else %}
         <p style="grid-column: 1/-1; text-align: center; color: #888; padding: 30px;">Tidak ada laporan barang pada kategori ini.</p>
         {% endfor %}
+    </div>
+
+{% if session.get('admin') or role == 'admin' %}
+</form>
+{% endif %}
     </div>
 </div>
 
@@ -697,6 +767,55 @@
             header.style.backgroundSize = "100% auto";
         }
     });
+// Fungsi Select All
+function toggleSelectAll(master) {
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    checkboxes.forEach(cb => cb.checked = master.checked);
+    updateHitungan();
+}
+
+// Fungsi Update Jumlah Terpilih & Aktifkan Tombol
+function updateHitungan() {
+    const terpilih = document.querySelectorAll('.item-checkbox:checked').length;
+    
+    // Update semua label angka terpilih
+    document.querySelectorAll('.jumlahTerpilih').forEach(el => el.innerText = terpilih);
+    
+    // Tombol Tab Pending (Setujui / Tolak)
+    const btnSetujui = document.getElementById('btnSetujuiMasal');
+    const btnTolak = document.getElementById('btnTolakMasal');
+    if (btnSetujui && btnTolak) {
+        btnSetujui.disabled = terpilih === 0;
+        btnTolak.disabled = terpilih === 0;
+        btnSetujui.style.opacity = terpilih > 0 ? '1' : '0.5';
+        btnTolak.style.opacity = terpilih > 0 ? '1' : '0.5';
+    }
+
+    // Tombol Hapus Masal (Tab Lainnya)
+    const btnHapus = document.getElementById('btnHapusMasal');
+    if (btnHapus) {
+        btnHapus.disabled = terpilih === 0;
+        btnHapus.style.opacity = terpilih > 0 ? '1' : '0.5';
+    }
+}
+
+// Konfirmasi Aksi Masal Pending
+function konfirmasiAksiMasal() {
+    const terpilih = document.querySelectorAll('.item-checkbox:checked').length;
+    const tombolKlik = document.activeElement ? document.activeElement.value : 'proses';
+    
+    if (tombolKlik === 'setujui') {
+        return confirm(`Apakah Anda yakin ingin MENYETUJUI & MEMPUBLIKASIKAN ${terpilih} laporan terpilih?`);
+    } else {
+        return confirm(`Apakah Anda yakin ingin MENOLAK & MENGHAPUS ${terpilih} laporan terpilih?`);
+    }
+}
+
+// Konfirmasi Hapus Masal Tab Biasa
+function konfirmasiHapusMasal() {
+    const terpilih = document.querySelectorAll('.item-checkbox:checked').length;
+    return confirm(`Apakah Anda yakin ingin menghapus ${terpilih} item terpilih secara permanen?`);
+}
 </script>
 
 </body>
