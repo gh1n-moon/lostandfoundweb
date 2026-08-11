@@ -11,25 +11,28 @@ from functools import wraps
 import requests
 
 def kirim_notif_telegram(nama_barang, jenis_laporan):
-    TOKEN_BOT = "8692387315:AAFe_2N3038HLQfujPDCigReQigpCUAT7Y4"
+    TOKEN_BOT = "8692387315:AAEpkVvAH4u4g-4jmn9uazfr9tNfs3A9yGE"
     CHAT_ID = "7990214224"
     
-    pesan = f"🔔 *Notifikasi Lost & Found UNIPOL*\n\n" \
+    pesan = f"<b>🔔 Notifikasi Lost & Found UNIPOL</b>\n\n" \
             f"Ada laporan baru masuk:\n" \
-            f"• *Barang:* {nama_barang}\n" \
-            f"• *Kategori:* {jenis_laporan}\n\n" \
+            f"• <b>Barang:</b> {nama_barang}\n" \
+            f"• <b>Kategori:</b> {jenis_laporan}\n\n" \
             f"Silakan periksa Antrean Persetujuan di website."
             
     url = f"https://api.telegram.org/bot{TOKEN_BOT}/sendMessage"
     payload = {
         "chat_id": CHAT_ID,
         "text": pesan,
-        "parse_mode": "Markdown"
+        "parse_mode": "HTML"
     }
+    
     try:
-        requests.post(url, data=payload)
+        response = requests.post(url, data=payload, timeout=5)
+        # Cetak hasil ke terminal VS Code untuk mempermudah pemantauan
+        print("=== TELEGRAM LOG ===", response.json())
     except Exception as e:
-        print("Gagal kirim notif Telegram:", e)
+        print("=== TELEGRAM ERROR ===", e)
 
 def admin_required(f):
     @wraps(f)
