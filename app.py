@@ -555,5 +555,15 @@ def logout():
     flash("Berhasil logout.", "info")
     return redirect(url_for('welcome'))
 
+from daily_recap import send_daily_summary
+
+@app.route('/trigger-rekap-rahasia-12345')
+def trigger_rekap():
+    try:
+        send_daily_summary()
+        return "Berhasil mengirim rekap harian!", 200
+    except Exception as e:
+        return f"Gagal mengirim rekap: {str(e)}", 500
+
 if __name__ == '__main__':
     app.run(debug=True)

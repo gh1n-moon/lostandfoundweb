@@ -41,3 +41,10 @@
 2026-08-12 05:45:51 [INFO]  * Debugger PIN: 122-180-756
 2026-08-12 05:46:18 [INFO] 127.0.0.1 - - [12/Aug/2026 05:46:18] "GET /index?status=Done&role=admin HTTP/1.1" 200 -
 2026-08-12 06:04:36 [INFO] 127.0.0.1 - - [12/Aug/2026 06:04:36] "GET /index?status=Done&role=admin HTTP/1.1" 200 -
+2026-08-12 06:23:01 [INFO]  * Detected change in 'D:\\lostandfoundweb\\telegram_helper.py', reloading
+2026-08-12 06:23:07 [WARNING]  * Debugger is active!
+2026-08-12 06:23:07 [INFO]  * Debugger PIN: 122-180-756
+2026-08-12 06:23:12 [INFO]  * Detected change in 'D:\\lostandfoundweb\\telegram_helper.py', reloading
+2026-08-12 06:23:17 [WARNING]  * Debugger is active!
+2026-08-12 06:23:17 [INFO]  * Debugger PIN: 122-180-756
+2026-08-12 06:23:36 [INFO]  * Detected change in 'D:\\lostandfoundweb\\app.py', reloading

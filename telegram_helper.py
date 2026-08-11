@@ -2,7 +2,7 @@ import logging
 import time
 import requests
 
-# Konfigurasi Logging ke file app.log
+# Logging setup
 logging.basicConfig(
     filename='app.log',
     level=logging.INFO,
@@ -10,13 +10,11 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
+# Kredensial Telegram
 BOT_TOKEN = "8692387315:AAEpkVvAH4u4g-4jmn9uazfr9tNfs3A9yGE"
 GROUP_CHAT_ID = "-1004466603212"
 
 def send_telegram_with_retry(payload, max_retries=3, delay=2):
-    """
-    Mencoba mengirim notifikasi ke Telegram dengan batas re-try otomatis jika gagal.
-    """
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     
     for attempt in range(1, max_retries + 1):
