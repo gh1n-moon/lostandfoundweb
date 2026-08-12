@@ -77,3 +77,15 @@
 2026-08-12 21:20:29 [INFO] 127.0.0.1 - - [12/Aug/2026 21:20:29] "[36mGET /static/bg_kampus.jpg HTTP/1.1[0m" 304 -
 2026-08-12 21:24:06 [INFO]  * Detected change in 'D:\\lostandfoundweb\\app.py', reloading
 2026-08-12 21:24:12 [INFO]  * Restarting with stat
+2026-08-12 21:24:15 [WARNING]  * Debugger is active!
+2026-08-12 21:24:15 [INFO]  * Debugger PIN: 122-180-756
+2026-08-12 21:24:23 [INFO] 127.0.0.1 - - [12/Aug/2026 21:24:23] "GET /laporkan?role=admin HTTP/1.1" 200 -
+2026-08-12 21:24:57 [INFO] 127.0.0.1 - - [12/Aug/2026 21:24:57] "[32mPOST /laporkan?role=admin HTTP/1.1[0m" 302 -
+2026-08-12 21:24:57 [INFO] 127.0.0.1 - - [12/Aug/2026 21:24:57] "GET /index?role=admin HTTP/1.1" 200 -
+2026-08-12 21:24:58 [INFO] 127.0.0.1 - - [12/Aug/2026 21:24:58] "[36mGET /static/Logo_UNIPOL.png HTTP/1.1[0m" 304 -
+2026-08-12 21:24:58 [INFO] 127.0.0.1 - - [12/Aug/2026 21:24:58] "[36mGET /static/bg_kampus.jpg HTTP/1.1[0m" 304 -
+2026-08-12 21:24:58 [INFO] 127.0.0.1 - - [12/Aug/2026 21:24:58] "[36mGET /static/uploads/WhatsApp_Image_2022-09-30_at_09.00.29.jpeg HTTP/1.1[0m" 304 -
+2026-08-12 21:25:05 [INFO] 127.0.0.1 - - [12/Aug/2026 21:25:05] "GET /index?status=Pending&role=admin HTTP/1.1" 200 -
+2026-08-12 21:25:05 [INFO] 127.0.0.1 - - [12/Aug/2026 21:25:05] "[36mGET /static/Logo_UNIPOL.png HTTP/1.1[0m" 304 -
+2026-08-12 21:25:05 [INFO] 127.0.0.1 - - [12/Aug/2026 21:25:05] "[36mGET /static/bg_kampus.jpg HTTP/1.1[0m" 304 -
+2026-08-12 21:25:05 [INFO] 127.0.0.1 - - [12/Aug/2026 21:25:05] "GET /static/uploads/6199466264_109160547725095_1778261199473.png HTTP/1.1" 200 -
