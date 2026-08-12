@@ -296,11 +296,21 @@ def laporkan():
             conn.close()
             return render_template('laporkan.html', error=pesan_error, role=role_aktif, kategori_list=kategori_db)
 
-        file_foto = request.files.get('foto_barang')
-        if file_foto and file_foto.filename != '':
-            filename = secure_filename(file_foto.filename)
+        # 🟢 PERBAIKAN: Tangkap SEMUA input file foto (Kamera maupun Galeri)
+        daftar_file = request.files.getlist('foto_barang')
+        file_terpilih = None
+
+        # Cari file yang ada isinya (tidak kosong)
+        for f in daftar_file:
+            if f and f.filename != '':
+                file_terpilih = f
+                break
+
+        # Simpan file jika ditemukan
+        if file_terpilih:
+            filename = secure_filename(file_terpilih.filename)
             jalur_simpan = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file_foto.save(jalur_simpan)
+            file_terpilih.save(jalur_simpan)
         else:
             filename = 'default.jpg'
 
@@ -313,9 +323,13 @@ def laporkan():
         
         conn.commit()
         conn.close()
-        
-        kirim_notifikasi_telegram(nama, tipe)
 
+        # Notifikasi Telegram
+        try:
+            kirim_notif_telegram(nama, tipe)
+        except Exception as e:
+            print("Gagal notif Telegram:", e)
+        
         flash("Laporan Anda berhasil dikirim! Laporan sedang berada dalam antrean peninjauan Admin sebelum diterbitkan ke publik.", "sukses_pending")
         return redirect(url_for('index', role=role_aktif))
 
