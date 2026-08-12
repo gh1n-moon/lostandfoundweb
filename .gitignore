@@ -1,7 +1,2 @@
 /ngrok.exe
 database.db
-app.log
-database.db
-*.log
-__pycache__/
-instance/
